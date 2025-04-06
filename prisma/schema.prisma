@@ -57,26 +57,27 @@ enum WeekDay {
 }
 
 model User {
-  id             String           @id @default(cuid())
-  email          String           @unique
-  passwordHash   String?
-  googleId       String?          @unique
-  name           String
-  preferredLang  LangCode         @default(EN)
-  activeRole     RoleType?
-  isEmailConfirmed Boolean        @default(false)
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String?
+  googleId         String?   @unique
+  name             String
+  preferredLang    LangCode  @default(EN)
+  activeRole       RoleType?
+  isEmailConfirmed Boolean   @default(false)
   emailConfirmCode String?
 
-  roles          Role[]
-  trainerProfile TrainerProfile?
-  traineeProfile TraineeProfile?
-  parentProfile  ParentProfile?
-  adminProfile   AdminProfile?
-  telegramLink   TelegramLink?
-  scannedAttendances Attendance[] @relation("ScannedByUser")
+  roles              Role[]
+  trainerProfile     TrainerProfile?
+  traineeProfile     TraineeProfile?
+  parentProfile      ParentProfile?
+  adminProfile       AdminProfile?
+  telegramLink       TelegramLink?
+  scannedAttendances Attendance[]     @relation("ScannedByUser")
+  refreshSessions    RefreshSession[]
 
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Role {
@@ -89,11 +90,11 @@ model Role {
 }
 
 model TrainerProfile {
-  id               String                @id @default(cuid())
-  userId           String                @unique
-  user             User                  @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  groups           Group[]               @relation("GroupTrainers")
+  groups           Group[]              @relation("GroupTrainers")
   gyms             Gym[]                @relation("TrainerGyms")
   subscriptions    Subscription[]
   trainees         TrainerTraineeLink[]
@@ -101,89 +102,89 @@ model TrainerProfile {
   acceptedReferral ReferralInvite?      @relation("TrainerAcceptedInvite")
   templates        TrainingTemplate[]
 
-  currentPlan      PlanType              @default(FREE)
+  currentPlan      PlanType  @default(FREE)
   planStartedAt    DateTime?
   planUntil        DateTime?
   trialActivatedAt DateTime?
 
-  limits           TrainerLimits?
+  limits TrainerLimits?
 }
 
 model TrainerLimits {
-  id            String   @id @default(cuid())
-  trainerId     String   @unique
-  maxTrainees   Int?
-  maxGroups     Int?
-  maxGyms       Int?
-  maxTemplates  Int?
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  trainerId    String   @unique
+  maxTrainees  Int?
+  maxGroups    Int?
+  maxGyms      Int?
+  maxTemplates Int?
+  updatedAt    DateTime @updatedAt
 
-  trainer       TrainerProfile @relation(fields: [trainerId], references: [id])
+  trainer TrainerProfile @relation(fields: [trainerId], references: [id])
 }
 
 model ReferralInvite {
-  id           String          @id @default(cuid())
-  code         String          @unique
+  id           String  @id @default(cuid())
+  code         String  @unique
   issuedById   String
-  acceptedById String?         @unique
+  acceptedById String? @unique
 
   usedAt       DateTime?
-  bonusGranted Boolean         @default(false)
+  bonusGranted Boolean   @default(false)
 
-  issuedBy     TrainerProfile @relation("TrainerIssuedInvites", fields: [issuedById], references: [id])
-  acceptedBy   TrainerProfile? @relation("TrainerAcceptedInvite", fields: [acceptedById], references: [id])
+  issuedBy   TrainerProfile  @relation("TrainerIssuedInvites", fields: [issuedById], references: [id])
+  acceptedBy TrainerProfile? @relation("TrainerAcceptedInvite", fields: [acceptedById], references: [id])
 }
 
 model TraineeProfile {
-  id         String                 @id @default(cuid())
-  userId     String                 @unique
-  user       User                   @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  groups     Group[]                @relation("TraineeGroups")
+  groups        Group[]              @relation("TraineeGroups")
   subscriptions Subscription[]
-  attendances Attendance[]
-  parents    ParentTraineeLink[]
-  trainers   TrainerTraineeLink[]
+  attendances   Attendance[]
+  parents       ParentTraineeLink[]
+  trainers      TrainerTraineeLink[]
 }
 
 model TrainerTraineeLink {
-  id         String           @id @default(cuid())
-  trainerId  String
-  traineeId  String
-  isActive   Boolean          @default(true)
-  frozenAt   DateTime?
+  id        String    @id @default(cuid())
+  trainerId String
+  traineeId String
+  isActive  Boolean   @default(true)
+  frozenAt  DateTime?
 
-  trainer    TrainerProfile   @relation(fields: [trainerId], references: [id])
-  trainee    TraineeProfile   @relation(fields: [traineeId], references: [id])
+  trainer TrainerProfile @relation(fields: [trainerId], references: [id])
+  trainee TraineeProfile @relation(fields: [traineeId], references: [id])
 
   @@unique([trainerId, traineeId])
 }
 
 model ParentProfile {
-  id         String               @id @default(cuid())
-  userId     String               @unique
-  user       User                 @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  trainees   ParentTraineeLink[]
+  trainees ParentTraineeLink[]
 }
 
 model ParentTraineeLink {
-  id        String           @id @default(cuid())
+  id        String @id @default(cuid())
   parentId  String
   traineeId String
 
-  parent    ParentProfile   @relation(fields: [parentId], references: [id])
-  trainee   TraineeProfile  @relation(fields: [traineeId], references: [id])
+  parent  ParentProfile  @relation(fields: [parentId], references: [id])
+  trainee TraineeProfile @relation(fields: [traineeId], references: [id])
 
   @@unique([parentId, traineeId])
 }
 
 model AdminProfile {
-  id       String     @id @default(cuid())
-  userId   String     @unique
-  user     User       @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  gyms     Gym[]      @relation("GymAdmins")
+  gyms Gym[] @relation("GymAdmins")
 }
 
 model TelegramLink {
@@ -193,118 +194,130 @@ model TelegramLink {
   username   String?
   linkedAt   DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Gym {
-  id        String           @id @default(cuid())
+  id        String  @id @default(cuid())
   name      String
   address   String
   geoLat    Float?
   geoLng    Float?
   workHours String?
 
-  trainers  TrainerProfile[] @relation("TrainerGyms")
-  admins    AdminProfile[]   @relation("GymAdmins")
+  trainers  TrainerProfile[]   @relation("TrainerGyms")
+  admins    AdminProfile[]     @relation("GymAdmins")
   groups    Group[]
   trainings Training[]
   templates TrainingTemplate[]
 
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Group {
-  id        String           @id @default(cuid())
-  name      String
-  gymId     String?
-  gym       Gym?             @relation(fields: [gymId], references: [id])
+  id    String  @id @default(cuid())
+  name  String
+  gymId String?
+  gym   Gym?    @relation(fields: [gymId], references: [id])
 
-  trainees  TraineeProfile[] @relation("TraineeGroups")
-  trainers  TrainerProfile[] @relation("GroupTrainers")
+  trainees  TraineeProfile[]   @relation("TraineeGroups")
+  trainers  TrainerProfile[]   @relation("GroupTrainers")
   trainings Training[]
   templates TrainingTemplate[]
 }
 
 model Training {
-  id            String              @id @default(cuid())
-  type          TrainingType
-  date          DateTime
-  durationMin   Int
-  gymId         String
-  groupId       String?
-  templateId    String?
+  id          String       @id @default(cuid())
+  type        TrainingType
+  date        DateTime
+  durationMin Int
+  gymId       String
+  groupId     String?
+  templateId  String?
 
-  gym           Gym                 @relation(fields: [gymId], references: [id])
-  group         Group?              @relation(fields: [groupId], references: [id])
-  template      TrainingTemplate?   @relation(fields: [templateId], references: [id])
-  attendances   Attendance[]
+  gym         Gym               @relation(fields: [gymId], references: [id])
+  group       Group?            @relation(fields: [groupId], references: [id])
+  template    TrainingTemplate? @relation(fields: [templateId], references: [id])
+  attendances Attendance[]
 }
 
 model Attendance {
-  id               String           @id @default(cuid())
-  traineeId        String
-  trainingId       String
-  status           AttendanceStatus @default(PRESENT)
-  markedAt         DateTime         @default(now())
-  scannedByUserId  String?
-  subscriptionId   String?
+  id              String           @id @default(cuid())
+  traineeId       String
+  trainingId      String
+  status          AttendanceStatus @default(PRESENT)
+  markedAt        DateTime         @default(now())
+  scannedByUserId String?
+  subscriptionId  String?
 
-  trainee          TraineeProfile   @relation(fields: [traineeId], references: [id])
-  training         Training         @relation(fields: [trainingId], references: [id])
-  scannedBy        User?            @relation("ScannedByUser", fields: [scannedByUserId], references: [id])
-  subscription     Subscription?    @relation(fields: [subscriptionId], references: [id])
+  trainee      TraineeProfile @relation(fields: [traineeId], references: [id])
+  training     Training       @relation(fields: [trainingId], references: [id])
+  scannedBy    User?          @relation("ScannedByUser", fields: [scannedByUserId], references: [id])
+  subscription Subscription?  @relation(fields: [subscriptionId], references: [id])
 }
 
 model Subscription {
-  id             String           @id @default(cuid())
-  traineeId      String
-  createdById    String
-  maxTrainings   Int?
-  validUntil     DateTime?
-  usedTrainings  Int              @default(0)
-  isPaid         Boolean          @default(false)
-  notes          String?
-  status         SubscriptionStatus @default(ACTIVE)
-  type           String
+  id            String             @id @default(cuid())
+  traineeId     String
+  createdById   String
+  maxTrainings  Int?
+  validUntil    DateTime?
+  usedTrainings Int                @default(0)
+  isPaid        Boolean            @default(false)
+  notes         String?
+  status        SubscriptionStatus @default(ACTIVE)
+  type          String
 
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  trainee        TraineeProfile   @relation(fields: [traineeId], references: [id])
-  createdBy      TrainerProfile   @relation(fields: [createdById], references: [id])
-  attendances    Attendance[]
+  trainee     TraineeProfile @relation(fields: [traineeId], references: [id])
+  createdBy   TrainerProfile @relation(fields: [createdById], references: [id])
+  attendances Attendance[]
 }
 
 model TrainingTemplate {
-  id            String              @id @default(cuid())
-  groupId       String
-  trainerId     String
-  gymId         String?
+  id        String  @id @default(cuid())
+  groupId   String
+  trainerId String
+  gymId     String?
 
-  durationMin   Int
-  type          TrainingType
+  durationMin Int
+  type        TrainingType
 
-  startDate     DateTime
-  endDate       DateTime?
+  startDate DateTime
+  endDate   DateTime?
 
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  group         Group               @relation(fields: [groupId], references: [id])
-  trainer       TrainerProfile      @relation(fields: [trainerId], references: [id])
-  gym           Gym?                @relation(fields: [gymId], references: [id])
+  group   Group          @relation(fields: [groupId], references: [id])
+  trainer TrainerProfile @relation(fields: [trainerId], references: [id])
+  gym     Gym?           @relation(fields: [gymId], references: [id])
 
-  timeSlots     TimeSlot[]
-  trainings     Training[]
+  timeSlots TimeSlot[]
+  trainings Training[]
 }
 
 model TimeSlot {
-  id            String           @id @default(cuid())
-  templateId    String
-  dayOfWeek     WeekDay
-  time          String           // HH:mm
+  id         String  @id @default(cuid())
+  templateId String
+  dayOfWeek  WeekDay
+  time       String // HH:mm
 
-  template      TrainingTemplate @relation(fields: [templateId], references: [id])
+  template TrainingTemplate @relation(fields: [templateId], references: [id])
 }
 
+model RefreshSession {
+  id        String   @id @default(cuid())
+  userId    String
+  ip        String?
+  userAgent String?
+  token     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id])
+}
