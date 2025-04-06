@@ -14,6 +14,19 @@ export const registerUserBody = zod.object({
   name: zod.string(),
 });
 
+export const confirmEmailBodyCodeMin = 6;
+
+export const confirmEmailBodyCodeMax = 6;
+
+export const confirmEmailBody = zod.object({
+  email: zod.string().email(),
+  code: zod.string().min(confirmEmailBodyCodeMin).max(confirmEmailBodyCodeMax),
+});
+
+export const confirmEmailResponse = zod.object({
+  message: zod.string(),
+});
+
 export const loginUserBody = zod.object({
   email: zod.string().email(),
   password: zod.string(),
@@ -32,6 +45,24 @@ export const loginUserResponse = zod.object({
       "ADMIN",
       "SUPERADMIN",
     ]),
+    isEmailConfirmed: zod.boolean(),
+  }),
+});
+
+export const refreshTokenResponse = zod.object({
+  accessToken: zod.string(),
+  user: zod.object({
+    id: zod.string(),
+    email: zod.string(),
+    name: zod.string(),
+    activeRole: zod.enum([
+      "TRAINER",
+      "TRAINEE",
+      "PARENT",
+      "ADMIN",
+      "SUPERADMIN",
+    ]),
+    isEmailConfirmed: zod.boolean(),
   }),
 });
 
@@ -52,5 +83,6 @@ export const googleAuthResponse = zod.object({
       "ADMIN",
       "SUPERADMIN",
     ]),
+    isEmailConfirmed: zod.boolean(),
   }),
 });

@@ -17,10 +17,10 @@ export class AuthController {
 
   @Post("login")
   async login(
-    @Body("email") email: string,
-    @Body("password") password: string,
+    @Body(new ZodPipe(AuthDtoSchemas.loginUserBody))
+    body: InferSchema<AuthDto.LoginRequest>,
   ) {
-    return this.authService.login(email, password);
+    return this.authService.login(body);
   }
 
   // @Post("google")

@@ -64,6 +64,8 @@ model User {
   name           String
   preferredLang  LangCode         @default(EN)
   activeRole     RoleType?
+  isEmailConfirmed Boolean        @default(false)
+  emailConfirmCode String?
 
   roles          Role[]
   trainerProfile TrainerProfile?
