@@ -1,15 +1,17 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
-  ForbiddenException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
+import { nanoid } from "nanoid";
+import { EnvConfig, envConfig } from "../config/config.env";
+import { EmailService } from "../email/email.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthDto } from "./dto";
-import { EmailService } from "../email/email.service";
-import { nanoid } from "nanoid";
+import { RefreshDto } from "./dto/refresh.dto";
 
 @Injectable()
 export class AuthService {
@@ -19,6 +21,8 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    @Inject(envConfig.KEY)
+    private readonly config: EnvConfig,
   ) {
     // this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
@@ -73,7 +77,10 @@ export class AuthService {
     return { message: "Email confirmed successfully" };
   }
 
-  async login(dto: AuthDto.LoginRequest) {
+  async login(
+    dto: AuthDto.LoginRequest,
+    info: { ip?: string; userAgent?: string } = {},
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -82,62 +89,119 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    if (!user.passwordHash) {
-      throw new UnauthorizedException("Invalid credentials");
-    }
-
     const isPasswordValid = await bcrypt.compare(
       dto.password,
       user.passwordHash,
     );
-
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    if (!user.isEmailConfirmed) {
-      throw new ForbiddenException("Please confirm your email first");
-    }
+    const tokens = await this.generateTokens(user.id);
 
-    const accessToken = this.jwtService.sign(
-      { sub: user.id, email: user.email },
-      { expiresIn: "15m" },
-    );
-
-    const refreshToken = this.jwtService.sign(
-      { sub: user.id, email: user.email },
-      { expiresIn: "7d" },
-    );
-
-    return {
-      accessToken,
-      refreshToken,
-    };
-  }
-
-  async refreshToken(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+    await this.createRefreshSession({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      ip: info.ip,
+      userAgent: info.userAgent,
     });
 
-    if (!user) {
-      throw new UnauthorizedException("Invalid token");
+    return tokens;
+  }
+
+  async refresh(dto: RefreshDto) {
+    const session = await this.prisma.refreshSession.findFirst({
+      where: {
+        tokenHash: await bcrypt.hash(dto.refreshToken, 10),
+        isRevoked: false,
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!session) {
+      throw new UnauthorizedException("Invalid refresh token");
     }
 
-    const accessToken = this.jwtService.sign(
-      { sub: user.id, email: user.email },
-      { expiresIn: "15m" },
+    const tokens = await this.generateTokens(session.userId);
+    await this.updateRefreshSession(session.id, tokens.refreshToken);
+
+    return tokens;
+  }
+
+  async logout(refreshToken: string) {
+    const session = await this.prisma.refreshSession.findFirst({
+      where: {
+        tokenHash: await bcrypt.hash(refreshToken, 10),
+        isRevoked: false,
+      },
+    });
+
+    if (!session) {
+      throw new UnauthorizedException("Invalid refresh token");
+    }
+
+    await this.prisma.refreshSession.update({
+      where: { id: session.id },
+      data: { isRevoked: true },
+    });
+  }
+
+  async logoutAll(userId: string) {
+    await this.prisma.refreshSession.updateMany({
+      where: { userId, isRevoked: false },
+      data: { isRevoked: true },
+    });
+  }
+
+  private async createRefreshSession(data: {
+    userId: string;
+    refreshToken: string;
+    ip: string;
+    userAgent: string;
+  }) {
+    const tokenHash = await bcrypt.hash(data.refreshToken, 10);
+    const expiresAt = new Date();
+    expiresAt.setDate(
+      expiresAt.getDate() + this.config.refreshTokenExpirationMinutes,
     );
 
-    const refreshToken = this.jwtService.sign(
-      { sub: user.id, email: user.email },
-      { expiresIn: "7d" },
+    await this.prisma.refreshSession.create({
+      data: {
+        userId: data.userId,
+        tokenHash,
+        ip: data.ip,
+        userAgent: data.userAgent,
+        expiresAt,
+      },
+    });
+  }
+
+  private async updateRefreshSession(sessionId: string, refreshToken: string) {
+    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const expiresAt = new Date();
+    expiresAt.setDate(
+      expiresAt.getDate() + this.config.refreshTokenExpirationMinutes,
     );
 
-    return {
-      accessToken,
-      refreshToken,
-    };
+    await this.prisma.refreshSession.update({
+      where: { id: sessionId },
+      data: { tokenHash, expiresAt },
+    });
+  }
+
+  private async generateTokens(userId: string) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(
+        { sub: userId },
+        { expiresIn: this.config.jwtExpirationMinutes + "m" },
+      ),
+      this.jwtService.signAsync(
+        { sub: userId },
+        { expiresIn: this.config.refreshTokenExpirationMinutes },
+      ),
+    ]);
+
+    return { accessToken, refreshToken };
   }
 
   // async googleAuth(token: string) {
