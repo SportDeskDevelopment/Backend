@@ -11,20 +11,17 @@ import { EmailService } from "../email/email.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthDto } from "./dto";
 import { RefreshDto } from "./dto/refresh.dto";
+import { addMinutes } from "../shared/lib/date";
 
 @Injectable()
 export class AuthService {
-  // private googleClient: OAuth2Client;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     @Inject(envConfig.KEY)
     private readonly config: EnvConfig,
-  ) {
-    // this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-  }
+  ) {}
 
   async register(dto: AuthDto.RegisterRequest) {
     const isUserExists = await this.prisma.user.findUnique({
@@ -38,6 +35,8 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const emailConfirmCode = this.generateRandomCode(6);
 
+    await this.emailService.sendConfirmationEmail(dto.email, emailConfirmCode);
+
     await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -46,8 +45,6 @@ export class AuthService {
         emailConfirmCode,
       },
     });
-
-    await this.emailService.sendConfirmationEmail(dto.email, emailConfirmCode);
 
     return { message: "Confirmation code sent to your email" };
   }
@@ -159,9 +156,9 @@ export class AuthService {
     userAgent: string;
   }) {
     const tokenHash = await bcrypt.hash(data.refreshToken, 10);
-    const expiresAt = new Date();
-    expiresAt.setDate(
-      expiresAt.getDate() + this.config.refreshTokenExpirationMinutes,
+    const expiresAt = addMinutes(
+      new Date(),
+      this.config.refreshTokenExpirationMinutes,
     );
 
     await this.prisma.refreshSession.create({
@@ -177,9 +174,9 @@ export class AuthService {
 
   private async updateRefreshSession(sessionId: string, refreshToken: string) {
     const tokenHash = await bcrypt.hash(refreshToken, 10);
-    const expiresAt = new Date();
-    expiresAt.setDate(
-      expiresAt.getDate() + this.config.refreshTokenExpirationMinutes,
+    const expiresAt = addMinutes(
+      new Date(),
+      this.config.refreshTokenExpirationMinutes,
     );
 
     await this.prisma.refreshSession.update({
@@ -189,17 +186,11 @@ export class AuthService {
   }
 
   private async generateTokens(userId: string) {
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(
-        { sub: userId },
-        { expiresIn: this.config.jwtExpirationMinutes + "m" },
-      ),
-      this.jwtService.signAsync(
-        { sub: userId },
-        { expiresIn: this.config.refreshTokenExpirationMinutes },
-      ),
-    ]);
-
+    const accessToken = await this.jwtService.signAsync(
+      { sub: userId },
+      { expiresIn: this.config.jwtExpirationMinutes + "m" },
+    );
+    const refreshToken = crypto.randomUUID();
     return { accessToken, refreshToken };
   }
 
@@ -208,58 +199,5 @@ export class AuthService {
       10 ** (length - 1) +
         Math.random() * (10 ** length - 10 ** (length - 1) - 1),
     ).toString();
-  }
-
-  // async googleAuth(token: string) {
-  //   const ticket = await this.googleClient.verifyIdToken({
-  //     idToken: token,
-  //     audience: process.env.GOOGLE_CLIENT_ID,
-  //   });
-
-  //   const payload = ticket.getPayload();
-  //   if (!payload) {
-  //     throw new UnauthorizedException("Invalid token");
-  //   }
-
-  //   const { email, name, sub: googleId } = payload;
-
-  //   let user = await this.prisma.user.findUnique({
-  //     where: { email },
-  //   });
-
-  //   if (!user) {
-  //     user = await this.prisma.user.create({
-  //       data: {
-  //         email,
-  //         name,
-  //         googleId,
-  //       },
-  //     });
-  //   } else if (!user.googleId) {
-  //     user = await this.prisma.user.update({
-  //       where: { id: user.id },
-  //       data: { googleId },
-  //     });
-  //   }
-
-  //   const jwtToken = this.generateToken(user);
-
-  //   return {
-  //     accessToken: jwtToken,
-  //     user: {
-  //       id: user.id,
-  //       email: user.email,
-  //       name: user.name,
-  //       activeRole: user.activeRole,
-  //     },
-  //   };
-  // }
-
-  private generateToken(user: any) {
-    return this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-      role: user.activeRole,
-    });
   }
 }

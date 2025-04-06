@@ -21,7 +21,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
     EmailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, JwtStrategy /*GoogleStrategy*/],
+  providers: [AuthService, PrismaService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

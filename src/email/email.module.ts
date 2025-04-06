@@ -1,36 +1,37 @@
-import { Module } from "@nestjs/common";
-import { EmailService } from "./email.service";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 import { MailerModule } from "@nestjs-modules/mailer";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
 import { join } from "path";
+import { envConfig, EnvConfig } from "../config/config.env";
+import { EmailService } from "./email.service";
 
 @Module({
   imports: [
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (config: ConfigService) => ({
+      useFactory: async (config: EnvConfig) => ({
         transport: {
-          host: config.get("EMAIL_HOST"),
-          port: config.get("EMAIL_PORT"),
-          secure: true,
+          host: config.smtpHost,
+          port: config.smtpPort,
+          secure: config.nodeEnv === "production",
           auth: {
-            user: config.get("EMAIL_USER"),
-            pass: config.get("EMAIL_PASS"),
+            user: config.smtpUser,
+            pass: config.smtpPass,
           },
         },
         defaults: {
-          from: "No Reply <noreply@example.com>",
+          from: `No Reply <${config.smtpFrom}>`,
         },
         template: {
-          dir: join(__dirname, "templates"),
+          dir: join(__dirname, "./templates"),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,
           },
         },
       }),
-      inject: [ConfigService],
+      inject: [envConfig.KEY],
     }),
   ],
   providers: [EmailService],

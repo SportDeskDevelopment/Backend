@@ -9,6 +9,10 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(cookieParser());
-  await app.listen(3000);
+  app.setGlobalPrefix("api");
+  const port = process.env.PORT || 5000;
+  await app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
 }
 bootstrap();
