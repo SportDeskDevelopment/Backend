@@ -86,3 +86,11 @@ export const googleAuthResponse = zod.object({
     isEmailConfirmed: zod.boolean(),
   }),
 });
+
+export const logoutUserResponse = zod.object({
+  message: zod.string().optional(),
+});
+
+export const logoutAllDevicesResponse = zod.object({
+  message: zod.string().optional(),
+});

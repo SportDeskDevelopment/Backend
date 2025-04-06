@@ -4,6 +4,7 @@ import { AuthModule } from "./auth/auth.module";
 import { EmailModule } from "./email/email.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { envConfig } from "./config/config.env";
+import { TrainerModule } from './trainer/trainer.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { envConfig } from "./config/config.env";
     PrismaModule,
     AuthModule,
     EmailModule,
+    TrainerModule,
   ],
   controllers: [],
   providers: [],

@@ -12,6 +12,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AuthDto } from "./dto";
 import { RefreshDto } from "./dto/refresh.dto";
 import { addMinutes } from "../shared/lib/date";
+import { JwtPayload } from "../common/types/jwt-payload";
 
 @Injectable()
 export class AuthService {
@@ -93,7 +94,12 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    const tokens = await this.generateTokens(user.id);
+    const tokens = await this.generateTokens({
+      sub: user.id,
+      email: user.email,
+      preferredLang: user.preferredLang,
+      activeRole: user.activeRole,
+    });
 
     await this.createRefreshSession({
       userId: user.id,
@@ -118,7 +124,20 @@ export class AuthService {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    const tokens = await this.generateTokens(session.userId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: session.userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    const tokens = await this.generateTokens({
+      sub: user.id,
+      email: user.email,
+      preferredLang: user.preferredLang,
+      activeRole: user.activeRole,
+    });
     await this.updateRefreshSession(session.id, tokens.refreshToken);
 
     return tokens;
@@ -185,11 +204,10 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(userId: string) {
-    const accessToken = await this.jwtService.signAsync(
-      { sub: userId },
-      { expiresIn: this.config.jwtExpirationMinutes + "m" },
-    );
+  private async generateTokens(payload: JwtPayload) {
+    const accessToken = await this.jwtService.signAsync(payload, {
+      expiresIn: this.config.jwtExpirationMinutes + "m",
+    });
     const refreshToken = crypto.randomUUID();
     return { accessToken, refreshToken };
   }

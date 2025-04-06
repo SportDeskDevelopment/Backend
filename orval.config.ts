@@ -15,4 +15,20 @@ export default defineConfig({
       ...common,
     },
   },
+  user: {
+    input: "../contracts/user.yaml",
+    output: {
+      target: "./src/user/dto/schemas.ts",
+      schemas: "./src/user/dto/objects",
+      ...common,
+    },
+  },
+  trainer: {
+    input: "../contracts/trainer.yaml",
+    output: {
+      target: "./src/trainer/dto/schemas.ts",
+      schemas: "./src/trainer/dto/objects",
+      ...common,
+    },
+  },
 });
