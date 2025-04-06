@@ -18,9 +18,9 @@ export class AuthService {
   // private googleClient: OAuth2Client;
 
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-    private emailService: EmailService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
     @Inject(envConfig.KEY)
     private readonly config: EnvConfig,
   ) {
