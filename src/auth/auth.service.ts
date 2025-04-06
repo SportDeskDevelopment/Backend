@@ -13,11 +13,11 @@ import { AuthDto } from "./dto";
 import { RefreshDto } from "./dto/refresh.dto";
 import { addMinutes } from "../shared/lib/date";
 import { JwtPayload } from "../common/types/jwt-payload";
-
+import * as DB from "@prisma/client";
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly db: PrismaService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     @Inject(envConfig.KEY)
@@ -25,7 +25,7 @@ export class AuthService {
   ) {}
 
   async register(dto: AuthDto.RegisterRequest) {
-    const isUserExists = await this.prisma.user.findUnique({
+    const isUserExists = await this.db.user.findUnique({
       where: { email: dto.email },
     });
 
@@ -38,12 +38,17 @@ export class AuthService {
 
     await this.emailService.sendConfirmationEmail(dto.email, emailConfirmCode);
 
-    await this.prisma.user.create({
+    // create trainee profile by default and set active role to trainee
+    await this.db.user.create({
       data: {
         email: dto.email,
         passwordHash,
         name: dto.name,
         emailConfirmCode,
+        activeRole: DB.RoleType.TRAINEE,
+        traineeProfile: {
+          create: {},
+        },
       },
     });
 
@@ -51,7 +56,7 @@ export class AuthService {
   }
 
   async confirmEmail(dto: AuthDto.ConfirmEmailRequest) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.db.user.findUnique({
       where: { email: dto.email },
     });
 
@@ -63,7 +68,7 @@ export class AuthService {
       throw new UnauthorizedException("Invalid confirmation code");
     }
 
-    await this.prisma.user.update({
+    await this.db.user.update({
       where: { id: user.id },
       data: {
         isEmailConfirmed: true,
@@ -78,7 +83,7 @@ export class AuthService {
     dto: AuthDto.LoginRequest,
     info: { ip?: string; userAgent?: string } = {},
   ) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.db.user.findUnique({
       where: { email: dto.email },
     });
 
@@ -112,7 +117,7 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshDto) {
-    const session = await this.prisma.refreshSession.findFirst({
+    const session = await this.db.refreshSession.findFirst({
       where: {
         tokenHash: await bcrypt.hash(dto.refreshToken, 10),
         isRevoked: false,
@@ -124,7 +129,7 @@ export class AuthService {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    const user = await this.prisma.user.findUnique({
+    const user = await this.db.user.findUnique({
       where: { id: session.userId },
     });
 
@@ -144,7 +149,7 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
-    const session = await this.prisma.refreshSession.findFirst({
+    const session = await this.db.refreshSession.findFirst({
       where: {
         tokenHash: await bcrypt.hash(refreshToken, 10),
         isRevoked: false,
@@ -155,14 +160,14 @@ export class AuthService {
       throw new UnauthorizedException("Invalid refresh token");
     }
 
-    await this.prisma.refreshSession.update({
+    await this.db.refreshSession.update({
       where: { id: session.id },
       data: { isRevoked: true },
     });
   }
 
   async logoutAll(userId: string) {
-    await this.prisma.refreshSession.updateMany({
+    await this.db.refreshSession.updateMany({
       where: { userId, isRevoked: false },
       data: { isRevoked: true },
     });
@@ -180,7 +185,7 @@ export class AuthService {
       this.config.refreshTokenExpirationMinutes,
     );
 
-    await this.prisma.refreshSession.create({
+    await this.db.refreshSession.create({
       data: {
         userId: data.userId,
         tokenHash,
@@ -198,7 +203,7 @@ export class AuthService {
       this.config.refreshTokenExpirationMinutes,
     );
 
-    await this.prisma.refreshSession.update({
+    await this.db.refreshSession.update({
       where: { id: sessionId },
       data: { tokenHash, expiresAt },
     });

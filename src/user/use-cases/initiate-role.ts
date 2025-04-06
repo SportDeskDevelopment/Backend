@@ -17,11 +17,12 @@ export class InitiateRoleUseCase {
   constructor(private readonly db: PrismaService) {}
 
   async exec({ userId, role }: Command) {
+    this.validateSuperAdminRole(role);
     await this.validateUser({ userId, role });
 
     await this.db.user.update({
       where: { id: userId },
-      data: { roles: { create: { type: role } } },
+      data: { roles: { create: { type: role } }, activeRole: role },
     });
 
     const operation = {
@@ -34,6 +35,12 @@ export class InitiateRoleUseCase {
     const profileId = await operation(userId);
 
     return { profileId };
+  }
+
+  private validateSuperAdminRole(role: DB.RoleType) {
+    if (role === "SUPERADMIN") {
+      throw new BadRequestException("Superadmin role cannot be initiated");
+    }
   }
 
   private async validateUser({ userId, role }: Command) {
