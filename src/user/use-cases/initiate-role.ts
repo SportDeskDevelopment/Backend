@@ -38,9 +38,9 @@ export class InitiateRoleUseCase {
   }
 
   private validateSuperAdminRole(role: DB.RoleType) {
-    if (role === "SUPERADMIN") {
-      throw new BadRequestException("Superadmin role cannot be initiated");
-    }
+    if (role !== DB.RoleType.SUPERADMIN) return;
+
+    throw new BadRequestException("Super admin role cannot be initiated");
   }
 
   private async validateUser({ userId, role }: Command) {
