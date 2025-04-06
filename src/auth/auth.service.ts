@@ -6,7 +6,6 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import { nanoid } from "nanoid";
 import { EnvConfig, envConfig } from "../config/config.env";
 import { EmailService } from "../email/email.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -37,7 +36,7 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const emailConfirmCode = nanoid(6);
+    const emailConfirmCode = this.generateRandomCode(6);
 
     await this.prisma.user.create({
       data: {
@@ -202,6 +201,13 @@ export class AuthService {
     ]);
 
     return { accessToken, refreshToken };
+  }
+
+  private generateRandomCode(length: number) {
+    return Math.floor(
+      10 ** (length - 1) +
+        Math.random() * (10 ** length - 10 ** (length - 1) - 1),
+    ).toString();
   }
 
   // async googleAuth(token: string) {
