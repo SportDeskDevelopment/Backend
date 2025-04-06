@@ -25,9 +25,9 @@ export class InitiateRoleUseCase {
       data: { roles: { create: { type: role } }, activeRole: role },
     });
 
+    // don't create trainee profile because we already created it in register process
     const operation = {
       [DB.RoleType.TRAINER]: this.createTrainerProfile,
-      [DB.RoleType.TRAINEE]: this.createTraineeProfile,
       [DB.RoleType.PARENT]: this.createParentProfile,
       [DB.RoleType.ADMIN]: this.createAdminProfile,
     }[role];
@@ -60,13 +60,6 @@ export class InitiateRoleUseCase {
 
   private createTrainerProfile(userId: UserId) {
     return this.db.trainerProfile.create({
-      data: { userId },
-      select: { id: true },
-    });
-  }
-
-  private createTraineeProfile(userId: UserId) {
-    return this.db.traineeProfile.create({
       data: { userId },
       select: { id: true },
     });
