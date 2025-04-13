@@ -66,6 +66,7 @@ model User {
   activeRole       RoleType?
   isEmailConfirmed Boolean   @default(false)
   emailConfirmCode String?
+  username         String?   @unique
 
   roles              Role[]
   trainerProfile     TrainerProfile?
@@ -108,6 +109,8 @@ model TrainerProfile {
   trialActivatedAt DateTime?
 
   limits TrainerLimits?
+
+  trainings Training[] @relation("TrainingTrainers")
 }
 
 model TrainerLimits {
@@ -228,18 +231,20 @@ model Group {
 }
 
 model Training {
-  id          String       @id @default(cuid())
-  type        TrainingType
-  date        DateTime
-  durationMin Int
-  gymId       String
+  id          String        @id @default(cuid())
+  type        TrainingType?
+  startDate   DateTime?     @map("start_date")
+  durationMin Int?
+  name        String?
+  gymId       String?
   groupId     String?
   templateId  String?
 
-  gym         Gym               @relation(fields: [gymId], references: [id])
+  gym         Gym?              @relation(fields: [gymId], references: [id])
   group       Group?            @relation(fields: [groupId], references: [id])
   template    TrainingTemplate? @relation(fields: [templateId], references: [id])
   attendances Attendance[]
+  trainers    TrainerProfile[]  @relation("TrainingTrainers")
 }
 
 model Attendance {

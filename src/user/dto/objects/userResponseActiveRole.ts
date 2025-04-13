@@ -14,5 +14,4 @@ export const UserResponseActiveRole = {
   TRAINEE: "TRAINEE",
   PARENT: "PARENT",
   ADMIN: "ADMIN",
-  SUPERADMIN: "SUPERADMIN",
 } as const;

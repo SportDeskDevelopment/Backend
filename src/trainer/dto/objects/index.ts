@@ -5,10 +5,24 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from "./attachToTrainingRequest";
+export * from "./attachToTrainingResponse";
+export * from "./attachToTrainingResponseStatus";
 export * from "./createTrainerProfileRequest";
+export * from "./createTrainingResponse";
+export * from "./createTrainingResponseStatus";
 export * from "./invalidInputResponse";
 export * from "./invalidTokenResponse";
+export * from "./invalidTrainingAccessResponse";
 export * from "./profileExistsResponse";
 export * from "./profileNotFoundResponse";
+export * from "./scanAndCreateRequest";
+export * from "./scanAndCreateRequestTraining";
+export * from "./scanAndCreateRequestTrainingType";
+export * from "./scanTraineeRequest";
+export * from "./scanTraineeResponse";
+export * from "./scanTraineeResponseStatus";
+export * from "./scanTraineeResponseTrainingsItem";
+export * from "./traineeNotFoundResponse";
 export * from "./trainerProfile";
 export * from "./trainerProfileId";

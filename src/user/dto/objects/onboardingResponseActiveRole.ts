@@ -5,11 +5,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type UserResponseRolesItem =
-  (typeof UserResponseRolesItem)[keyof typeof UserResponseRolesItem];
+export type OnboardingResponseActiveRole =
+  (typeof OnboardingResponseActiveRole)[keyof typeof OnboardingResponseActiveRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UserResponseRolesItem = {
+export const OnboardingResponseActiveRole = {
   TRAINER: "TRAINER",
   TRAINEE: "TRAINEE",
   PARENT: "PARENT",

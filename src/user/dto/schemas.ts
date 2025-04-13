@@ -11,10 +11,12 @@ export const getCurrentUserResponse = zod.object({
   email: zod.string(),
   name: zod.string(),
   preferredLang: zod.enum(["en", "ua", "pl"]),
-  activeRole: zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN", "SUPERADMIN"]),
-  roles: zod.array(
-    zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN", "SUPERADMIN"]),
-  ),
+  activeRole: zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"]),
+  roles: zod.array(zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"])),
+});
+
+export const getUserOnboardingResponse = zod.object({
+  activeRole: zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"]),
 });
 
 export const updateUserLanguageBody = zod.object({

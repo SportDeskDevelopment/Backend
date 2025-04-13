@@ -21,3 +21,56 @@ export const createTrainerProfileBody = zod.object({
 export const createTrainerProfileResponse = zod.object({
   id: zod.string(),
 });
+
+export const scanTraineeBody = zod.object({
+  traineeUsername: zod.string(),
+});
+
+export const scanTraineeResponse = zod.object({
+  status: zod.enum([
+    "noActiveTraining",
+    "noTrainingFound",
+    "traineeAlreadyRecorded",
+    "traineeRecordedSuccessfully",
+    "specifyTraining",
+  ]),
+  trainings: zod
+    .array(
+      zod.object({
+        id: zod.string().optional(),
+        type: zod.string().optional(),
+        startDate: zod.string().datetime({}).optional(),
+        name: zod.string().optional(),
+      }),
+    )
+    .optional(),
+});
+
+export const scanAndCreateTrainingBody = zod.object({
+  traineeUsername: zod.string(),
+  training: zod
+    .object({
+      type: zod.enum(["INDIVIDUAL", "GROUP"]).optional(),
+      date: zod.string().datetime({}).optional(),
+      durationMin: zod.number().optional(),
+      gymId: zod.string().optional(),
+      groupId: zod.string().optional(),
+      templateId: zod.string().optional(),
+    })
+    .optional(),
+});
+
+export const scanAndCreateTrainingResponse = zod.object({
+  status: zod.enum(["trainingCreated"]),
+  trainingId: zod.string(),
+  traineeAdded: zod.boolean(),
+});
+
+export const attachToExistingTrainingBody = zod.object({
+  trainingId: zod.string(),
+  traineeUsername: zod.string(),
+});
+
+export const attachToExistingTrainingResponse = zod.object({
+  status: zod.enum(["added_to_existing_training"]),
+});
