@@ -283,10 +283,11 @@ model Subscription {
 }
 
 model TrainingTemplate {
-  id        String  @id @default(cuid())
-  groupId   String?
-  trainerId String
-  gymId     String?
+  id           String  @id @default(cuid())
+  groupId      String?
+  trainerId    String
+  gymId        String?
+  trainingName String?
 
   durationMin Int
   type        TrainingType
