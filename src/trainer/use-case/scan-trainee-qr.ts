@@ -220,7 +220,7 @@ export class ScanTraineeQRUseCase {
         trainers: { connect: { id: trainerId } },
         template: { connect: { id: template.id } },
       },
-      include: { attendances: true },
+      include: { attendances: { select: { traineeId: true } } },
     });
   }
 }
