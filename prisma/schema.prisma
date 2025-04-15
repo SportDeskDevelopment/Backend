@@ -284,7 +284,7 @@ model Subscription {
 
 model TrainingTemplate {
   id        String  @id @default(cuid())
-  groupId   String
+  groupId   String?
   trainerId String
   gymId     String?
 
@@ -297,7 +297,7 @@ model TrainingTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  group   Group          @relation(fields: [groupId], references: [id])
+  group   Group?         @relation(fields: [groupId], references: [id])
   trainer TrainerProfile @relation(fields: [trainerId], references: [id])
   gym     Gym?           @relation(fields: [gymId], references: [id])
 
@@ -309,7 +309,8 @@ model TimeSlot {
   id         String  @id @default(cuid())
   templateId String
   dayOfWeek  WeekDay
-  time       String // HH:mm
+  hours      Int
+  minutes    Int
 
   template TrainingTemplate @relation(fields: [templateId], references: [id])
 }
