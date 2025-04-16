@@ -127,7 +127,6 @@ export class ScanTraineeQRUseCase {
     const template = await this.getTemplate(trainerUserId);
 
     if (!template) return;
-    console.log("===template===", template);
 
     // It should be only one time slot for such time range
     const timeSlot = template.timeSlots[0];

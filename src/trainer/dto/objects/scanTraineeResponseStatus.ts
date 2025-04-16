@@ -11,7 +11,6 @@ export type ScanTraineeResponseStatus =
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ScanTraineeResponseStatus = {
   noActiveTraining: "noActiveTraining",
-  noTrainingFound: "noTrainingFound",
   traineeAlreadyRecorded: "traineeAlreadyRecorded",
   traineeRecordedSuccessfully: "traineeRecordedSuccessfully",
   specifyTraining: "specifyTraining",

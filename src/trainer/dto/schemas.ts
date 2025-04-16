@@ -24,12 +24,12 @@ export const createTrainerProfileResponse = zod.object({
 
 export const scanTraineeBody = zod.object({
   traineeUsername: zod.string(),
+  trainerId: zod.string(),
 });
 
 export const scanTraineeResponse = zod.object({
   status: zod.enum([
     "noActiveTraining",
-    "noTrainingFound",
     "traineeAlreadyRecorded",
     "traineeRecordedSuccessfully",
     "specifyTraining",
