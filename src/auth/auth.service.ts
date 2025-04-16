@@ -14,6 +14,7 @@ import { RefreshDto } from "./dto/refresh.dto";
 import { addMinutes } from "../shared/lib/date";
 import { JwtPayload } from "../common/types/jwt-payload";
 import * as DB from "@prisma/client";
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -99,8 +100,9 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
+    console.log("===user===", user);
     const tokens = await this.generateTokens({
-      sub: user.id,
+      id: user.id,
       email: user.email,
       preferredLang: user.preferredLang,
       activeRole: user.activeRole,
@@ -138,7 +140,7 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens({
-      sub: user.id,
+      id: user.id,
       email: user.email,
       preferredLang: user.preferredLang,
       activeRole: user.activeRole,

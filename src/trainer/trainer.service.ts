@@ -6,17 +6,6 @@ export class TrainerService {
   constructor(private readonly db: PrismaService) {}
 
   async getTraineeProfileByUsername(username: string) {
-    // const user = await this.db.user.findUnique({
-    //   where: { username },
-    //   include: {
-    //     roles: { where: { type: DB.RoleType.TRAINEE } },
-    //   },
-    // });
-
-    // if (!user) {
-    //   throw new NotFoundException("User not found");
-    // }
-
     const trainee = await this.db.traineeProfile.findFirst({
       where: {
         user: { username },
@@ -28,5 +17,17 @@ export class TrainerService {
     }
 
     return trainee;
+  }
+
+  async getTrainerProfileByUserId(userId: string) {
+    const trainer = await this.db.trainerProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!trainer) {
+      throw new NotFoundException("Trainer not found");
+    }
+
+    return trainer;
   }
 }

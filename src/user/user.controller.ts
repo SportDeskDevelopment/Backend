@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { CurrentUser } from "../common/decorators";
+import { LoggedInUser } from "../common/decorators";
 import { JwtPayload } from "../common/types/jwt-payload";
 import { InferSchema, ZodPipe } from "../shared/lib/zod";
 import { UserDto, UserDtoSchemas } from "./dto";
@@ -25,37 +25,37 @@ export class UserController {
   ) {}
 
   @Get("me")
-  async getCurrentUser(@CurrentUser() user: JwtPayload) {
-    return this.userService.getCurrentUser(user.sub);
+  async getCurrentUser(@LoggedInUser() user: JwtPayload) {
+    return this.userService.getCurrentUser(user.id);
   }
 
   @Patch("me/lang")
   async updateLanguage(
-    @CurrentUser() user: JwtPayload,
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(UserDtoSchemas.updateUserLanguageBody))
     body: InferSchema<UserDto.UpdateLanguageRequest>,
   ) {
-    return this.userService.updateLanguage(user.sub, body);
+    return this.userService.updateLanguage(user.id, body);
   }
 
   @Patch("me/role")
   async updateActiveRole(
-    @CurrentUser() user: JwtPayload,
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(UserDtoSchemas.updateUserRoleBody))
     body: InferSchema<UserDto.UpdateRoleRequest>,
   ) {
-    return this.userService.updateActiveRole(user.sub, body);
+    return this.userService.updateActiveRole(user.id, body);
   }
 
   @Post("me/role/init")
   @HttpCode(200)
   async initiateRole(
-    @CurrentUser() user: JwtPayload,
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(UserDtoSchemas.initializeUserRoleBody))
     body: InferSchema<typeof UserDtoSchemas.initializeUserRoleBody>,
   ) {
     return this.initiateRoleUseCase.exec({
-      userId: user.sub as UserId,
+      userId: user.id as UserId,
       role: body.role,
     });
   }

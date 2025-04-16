@@ -5,7 +5,7 @@ import { TrainerDto } from "../dto";
 import * as DB from "@prisma/client";
 
 type Command = {
-  trainerId: string;
+  trainerUserId: string;
   traineeUsername: string;
 };
 
@@ -17,21 +17,23 @@ export class ScanTraineeQRUseCase {
   ) {}
 
   async exec(command: Command): Promise<TrainerDto.ScanTraineeResponse> {
-    const trainee = await this.trainerService.getTraineeProfileByUsername(
-      command.traineeUsername,
+    const hasTrainingsOrTemplates = await this.checkTrainingsAndTemplates(
+      command.trainerUserId,
     );
 
-    const trainingsCount = await this.getTrainingsCountByTrainerId(
-      command.trainerId,
-    );
-
-    if (trainingsCount === 0) {
+    if (!hasTrainingsOrTemplates) {
       return {
         status: TrainerDto.ScanTraineeResponseStatus.noTrainingFound,
       };
     }
 
-    const activeTrainings = await this.getActiveTrainings(command.trainerId);
+    const trainee = await this.trainerService.getTraineeProfileByUsername(
+      command.traineeUsername,
+    );
+
+    const activeTrainings = await this.getActiveTrainings(
+      command.trainerUserId,
+    );
 
     // user should specify training and call another endpoint
     if (activeTrainings.length > 1) {
@@ -62,6 +64,7 @@ export class ScanTraineeQRUseCase {
       data: {
         traineeId: trainee.id,
         trainingId: activeTraining.id,
+        scannedByUserId: command.trainerUserId,
       },
     });
 
@@ -70,17 +73,22 @@ export class ScanTraineeQRUseCase {
     };
   }
 
-  private async getTrainingsCountByTrainerId(trainerId: string) {
-    return this.db.training.count({
+  private async checkTrainingsAndTemplates(trainerUserId: string) {
+    const trainingsCount = await this.db.training.count({
       where: {
         trainers: {
-          some: { id: trainerId },
+          some: { userId: trainerUserId },
         },
       },
     });
+
+    if (trainingsCount > 0) return true;
+
+    const template = await this.getTemplate(trainerUserId);
+    return !!template;
   }
 
-  private async getActiveTrainings(trainerId: string) {
+  private async getActiveTrainings(trainerUserId: string) {
     const fifteenMinutes = 1000 * 60 * 15;
     const now = new Date();
     const from = new Date(now.getTime() - fifteenMinutes);
@@ -89,7 +97,7 @@ export class ScanTraineeQRUseCase {
     const trainings = await this.db.training.findMany({
       where: {
         trainers: {
-          some: { id: trainerId },
+          some: { userId: trainerUserId },
         },
         startDate: {
           lte: to,
@@ -104,16 +112,13 @@ export class ScanTraineeQRUseCase {
         },
       },
     });
+    console.log("===trainings===", trainings);
 
     if (trainings.length > 0) {
       return trainings;
     }
 
-    const training = await this.createTrainingFromTemplate({
-      trainerId,
-      from,
-      to,
-    });
+    const training = await this.createTrainingFromTemplate(trainerUserId);
 
     if (!training) return [];
 
@@ -143,61 +148,12 @@ export class ScanTraineeQRUseCase {
     };
   }
 
-  private async createTrainingFromTemplate({
-    trainerId,
-    from,
-    to,
-  }: {
-    trainerId: string;
-    from: Date;
-    to: Date;
-  }) {
+  private async createTrainingFromTemplate(trainerUserId: string) {
     const now = new Date();
-
-    const currentDayOfWeek = this.dayToWeekDay(from.getDay());
-    const fromHours = from.getHours();
-    const fromMinutes = from.getMinutes();
-
-    const toHours = to.getHours();
-    const toMinutes = to.getMinutes();
-
-    const template = await this.db.trainingTemplate.findFirst({
-      where: {
-        trainerId,
-        startDate: { gte: from },
-        endDate: { lte: from },
-        timeSlots: {
-          some: {
-            AND: [
-              {
-                dayOfWeek: currentDayOfWeek,
-              },
-              {
-                hours: {
-                  gte: fromHours,
-                  lte: toHours,
-                },
-                minutes: {
-                  gte: fromMinutes,
-                  lte: toMinutes,
-                },
-              },
-            ],
-          },
-        },
-      },
-      select: {
-        id: true,
-        gymId: true,
-        groupId: true,
-        trainingName: true,
-        type: true,
-        durationMin: true,
-        timeSlots: true,
-      },
-    });
+    const template = await this.getTemplate(trainerUserId);
 
     if (!template) return;
+    console.log("===template===", template);
 
     // It should be only one time slot for such time range
     const timeSlot = template.timeSlots[0];
@@ -217,10 +173,58 @@ export class ScanTraineeQRUseCase {
         name: template.trainingName,
         gym: { connect: { id: template.gymId } },
         group: { connect: { id: template.groupId } },
-        trainers: { connect: { id: trainerId } },
+        trainers: { connect: { userId: trainerUserId } },
         template: { connect: { id: template.id } },
       },
       include: { attendances: { select: { traineeId: true } } },
+    });
+  }
+
+  private async getTemplate(trainerUserId: string) {
+    const fifteenMinutes = 1000 * 60 * 15;
+    const now = new Date();
+    const from = new Date(now.getTime() - fifteenMinutes);
+    const to = new Date(now.getTime() + fifteenMinutes);
+
+    const currentDayOfWeek = this.dayToWeekDay(from.getDay());
+    const fromHours = from.getHours();
+    // const fromMinutes = from.getMinutes();
+
+    const toHours = to.getHours();
+    // const toMinutes = to.getMinutes();
+    // console.log("===from===", from);
+    // console.log("===to===", to);
+    // console.log("===fromHours===", fromHours);
+    // console.log("===toHours===", toHours);
+    // console.log("===fromMinutes===", fromMinutes);
+    // console.log("===toMinutes===", toMinutes);
+
+    const timeSlotsQuery = {
+      dayOfWeek: currentDayOfWeek,
+      hours: {
+        gte: fromHours,
+        lte: toHours,
+      },
+      // minutes: {
+      //   gte: fromMinutes,
+      //   lte: toMinutes,
+      // },
+    };
+
+    return this.db.trainingTemplate.findFirst({
+      where: {
+        trainer: { userId: trainerUserId },
+        startDate: { lte: from },
+        endDate: { gte: to },
+        timeSlots: {
+          some: timeSlotsQuery,
+        },
+      },
+      include: {
+        timeSlots: {
+          where: timeSlotsQuery,
+        },
+      },
     });
   }
 }

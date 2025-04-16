@@ -7,4 +7,5 @@
 
 export interface ScanTraineeRequest {
   traineeUsername: string;
+  trainerId: string;
 }

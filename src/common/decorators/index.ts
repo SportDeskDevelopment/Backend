@@ -1,2 +1,2 @@
-export { LoggedInUser as CurrentUser } from "./logged-in-user.decorator";
+export { LoggedInUser } from "./logged-in-user.decorator";
 export { Roles } from "./roles.decorator";

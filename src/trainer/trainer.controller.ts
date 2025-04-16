@@ -1,6 +1,6 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { z } from "zod";
-import { CurrentUser } from "../common/decorators";
+import { LoggedInUser } from "../common/decorators";
 import { JwtPayload } from "../common/types/jwt-payload";
 import { AttachToExistingUseCase } from "./use-case/attach-to-existing";
 import { CreateTrainerProfileUseCase } from "./use-case/create-trainer-profile";
@@ -9,6 +9,7 @@ import { ScanQRAndCreateTrainingUseCase } from "./use-case/scan-and-create-train
 import { ScanTraineeQRUseCase } from "./use-case/scan-trainee-qr";
 import { TrainerDtoSchemas } from "./dto";
 import { ResponseValidation, ZodPipe } from "../shared/lib/zod";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 
 @Controller("trainer")
 export class TrainerController {
@@ -21,26 +22,28 @@ export class TrainerController {
   ) {}
 
   @Post("scan-qr")
+  @UseGuards(JwtAuthGuard)
   async scanTraineeQR(
-    @CurrentUser() user: JwtPayload,
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.scanTraineeBody))
     body: z.infer<typeof TrainerDtoSchemas.scanTraineeBody>,
   ) {
     return this.scanTraineeQRUseCase.exec({
-      trainerId: user.sub,
+      trainerUserId: user.id,
       traineeUsername: body.traineeUsername,
     });
   }
 
   @Post("scan-qr-and-create")
+  @UseGuards(JwtAuthGuard)
   @ResponseValidation(TrainerDtoSchemas.scanAndCreateTrainingResponse)
   async scanQRAndCreate(
-    @CurrentUser() user: JwtPayload,
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.scanAndCreateTrainingBody))
     body: z.infer<typeof TrainerDtoSchemas.scanAndCreateTrainingBody>,
   ) {
     return this.scanQRAndCreateTrainingUseCase.exec({
-      trainerId: user.sub,
+      trainerId: user.id,
       traineeUsername: body.traineeUsername,
       training: {
         ...body.training,
@@ -53,12 +56,12 @@ export class TrainerController {
 
   @Post("attach-to-existing")
   async attachToExisting(
-    @CurrentUser() user: JwtPayload,
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.attachToExistingTrainingBody))
     body: z.infer<typeof TrainerDtoSchemas.attachToExistingTrainingBody>,
   ) {
     return this.attachToExistingUseCase.exec({
-      trainerId: user.sub,
+      trainerId: user.id,
       trainingId: body.trainingId,
       traineeUsername: body.traineeUsername,
     });
