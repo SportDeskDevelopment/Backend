@@ -17,16 +17,6 @@ export class ScanTraineeQRUseCase {
   ) {}
 
   async exec(command: Command): Promise<TrainerDto.ScanTraineeResponse> {
-    const hasTrainingsOrTemplates = await this.checkTrainingsAndTemplates(
-      command.trainerUserId,
-    );
-
-    if (!hasTrainingsOrTemplates) {
-      return {
-        status: TrainerDto.ScanTraineeResponseStatus.noTrainingFound,
-      };
-    }
-
     const trainee = await this.trainerService.getTraineeProfileByUsername(
       command.traineeUsername,
     );
@@ -73,21 +63,6 @@ export class ScanTraineeQRUseCase {
     };
   }
 
-  private async checkTrainingsAndTemplates(trainerUserId: string) {
-    const trainingsCount = await this.db.training.count({
-      where: {
-        trainers: {
-          some: { userId: trainerUserId },
-        },
-      },
-    });
-
-    if (trainingsCount > 0) return true;
-
-    const template = await this.getTemplate(trainerUserId);
-    return !!template;
-  }
-
   private async getActiveTrainings(trainerUserId: string) {
     const fifteenMinutes = 1000 * 60 * 15;
     const now = new Date();
@@ -112,7 +87,6 @@ export class ScanTraineeQRUseCase {
         },
       },
     });
-    console.log("===trainings===", trainings);
 
     if (trainings.length > 0) {
       return trainings;
