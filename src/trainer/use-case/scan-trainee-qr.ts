@@ -9,6 +9,7 @@ type Command = {
   traineeUsername: string;
 };
 
+//TODO: Сканирование за 15 минут до начала тренировки, всю продолжительность тренировки и 15 минут после ее окончания
 @Injectable()
 export class ScanTraineeQRUseCase {
   constructor(
@@ -24,6 +25,7 @@ export class ScanTraineeQRUseCase {
     const activeTrainings = await this.getActiveTrainings(
       command.trainerUserId,
     );
+    console.log("===activeTrainings===", activeTrainings);
 
     // user should specify training and call another endpoint
     if (activeTrainings.length > 1) {
@@ -64,10 +66,10 @@ export class ScanTraineeQRUseCase {
   }
 
   private async getActiveTrainings(trainerUserId: string) {
-    const fifteenMinutes = 1000 * 60 * 15;
+    const thirtyMinutes = 1000 * 60 * 30;
     const now = new Date();
-    const from = new Date(now.getTime() - fifteenMinutes);
-    const to = new Date(now.getTime() + fifteenMinutes);
+    const from = new Date(now.getTime() - thirtyMinutes);
+    const to = new Date(now.getTime() + thirtyMinutes);
 
     const trainings = await this.db.training.findMany({
       where: {

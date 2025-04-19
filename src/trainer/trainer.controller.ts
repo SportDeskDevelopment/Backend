@@ -23,6 +23,7 @@ export class TrainerController {
 
   @Post("scan-qr")
   @UseGuards(JwtAuthGuard)
+  @ResponseValidation(TrainerDtoSchemas.scanTraineeResponse)
   async scanTraineeQR(
     @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.scanTraineeBody))
