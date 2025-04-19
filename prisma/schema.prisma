@@ -75,7 +75,7 @@ model User {
   username         String?   @unique
   photoUrl         String?
 
-  roles              Role[]
+  roles              RoleType[]
   trainerProfile     TrainerProfile?
   traineeProfile     TraineeProfile?
   parentProfile      ParentProfile?
@@ -86,15 +86,6 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Role {
-  id     String   @id @default(cuid())
-  type   RoleType
-  userId String
-  user   User     @relation(fields: [userId], references: [id])
-
-  @@unique([type, userId])
 }
 
 model TrainerProfile {

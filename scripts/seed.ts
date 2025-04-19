@@ -19,11 +19,7 @@ async function main() {
       name: "Admin User",
       username: "adminUsername",
       passwordHash,
-      roles: {
-        create: {
-          type: RoleType.ADMIN,
-        },
-      },
+      roles: [RoleType.ADMIN],
       adminProfile: {
         create: {},
       },
@@ -39,11 +35,7 @@ async function main() {
       name: "Trainer User",
       username: "trainerUsername",
       passwordHash,
-      roles: {
-        create: {
-          type: RoleType.TRAINER,
-        },
-      },
+      roles: [RoleType.TRAINER],
       trainerProfile: {
         create: {
           currentPlan: PlanType.PREMIUM,
@@ -71,11 +63,7 @@ async function main() {
       name: "Trainee User",
       username: "traineeUsername",
       passwordHash,
-      roles: {
-        create: {
-          type: RoleType.TRAINEE,
-        },
-      },
+      roles: [RoleType.TRAINEE],
       traineeProfile: {
         create: {},
       },
@@ -91,11 +79,7 @@ async function main() {
       name: "Parent User",
       username: "parentUsername",
       passwordHash,
-      roles: {
-        create: {
-          type: RoleType.PARENT,
-        },
-      },
+      roles: [RoleType.PARENT],
       parentProfile: {
         create: {},
       },

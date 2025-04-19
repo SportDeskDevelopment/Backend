@@ -47,6 +47,7 @@ export class AuthService {
         name: dto.name,
         emailConfirmCode,
         activeRole: DB.RoleType.TRAINEE,
+        roles: [DB.RoleType.TRAINEE],
         traineeProfile: {
           create: {},
         },
