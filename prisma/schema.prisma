@@ -16,6 +16,12 @@ enum RoleType {
   SUPERADMIN
 }
 
+enum Sports {
+  KARATE
+  BOX
+  SWIMMING
+}
+
 enum LangCode {
   EN
   UA
@@ -67,6 +73,7 @@ model User {
   isEmailConfirmed Boolean   @default(false)
   emailConfirmCode String?
   username         String?   @unique
+  photoUrl         String?
 
   roles              Role[]
   trainerProfile     TrainerProfile?
@@ -91,9 +98,14 @@ model Role {
 }
 
 model TrainerProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id])
+  description     String?
+  trainingSince   Int?
+  sports          Sports[]      @default([])
+  publicContactId String?
+  publicContact   PublicContact? @relation(fields: [publicContactId], references: [id])
 
   groups           Group[]              @relation("GroupTrainers")
   gyms             Gym[]                @relation("TrainerGyms")
@@ -330,4 +342,20 @@ model RefreshSession {
 
   @@index([userId])
   @@index([tokenHash])
+}
+
+model PublicContact {
+  id             String           @id @default(cuid())
+  phoneNumbers   String[]         @default([])
+  emails         String[]         @default([])
+  socials        SocialNetwork[]  @relation("SocialPublicContacts")
+  TrainerProfile TrainerProfile[]
+}
+
+model SocialNetwork {
+  id             String          @id @default(cuid())
+  name           String
+  url            String
+  icon           String?
+  publicContacts PublicContact[] @relation("SocialPublicContacts")
 }
