@@ -192,8 +192,7 @@ async function main() {
       },
       maxTrainings: 12,
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      type: "MONTHLY",
-      isPaid: true,
+      type: "PERIOD",
     },
   });
 

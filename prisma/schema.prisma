@@ -62,6 +62,12 @@ enum WeekDay {
   SUNDAY
 }
 
+enum SubscriptionType {
+  PERIOD
+  DAYS
+  PERIOD_AND_DAYS
+}
+
 model User {
   id               String    @id @default(cuid())
   email            String    @unique
@@ -89,12 +95,12 @@ model User {
 }
 
 model TrainerProfile {
-  id              String        @id @default(cuid())
-  userId          String        @unique
-  user            User          @relation(fields: [userId], references: [id])
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id])
   description     String?
   trainingSince   Int?
-  sports          Sports[]      @default([])
+  sports          Sports[]       @default([])
   publicContactId String?
   publicContact   PublicContact? @relation(fields: [publicContactId], references: [id])
 
@@ -146,11 +152,12 @@ model TraineeProfile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 
-  groups        Group[]              @relation("TraineeGroups")
-  subscriptions Subscription[]
-  attendances   Attendance[]
-  parents       ParentTraineeLink[]
-  trainers      TrainerTraineeLink[]
+  groups               Group[]               @relation("TraineeGroups")
+  subscriptions        Subscription[]
+  attendances          Attendance[]
+  parents              ParentTraineeLink[]
+  trainers             TrainerTraineeLink[]
+  subscriptionTrainees SubscriptionTrainee[]
 }
 
 model TrainerTraineeLink {
@@ -227,10 +234,11 @@ model Group {
   gymId String?
   gym   Gym?    @relation(fields: [gymId], references: [id])
 
-  trainees  TraineeProfile[]   @relation("TraineeGroups")
-  trainers  TrainerProfile[]   @relation("GroupTrainers")
-  trainings Training[]
-  templates TrainingTemplate[]
+  trainees      TraineeProfile[]   @relation("TraineeGroups")
+  trainers      TrainerProfile[]   @relation("GroupTrainers")
+  trainings     Training[]
+  templates     TrainingTemplate[]
+  subscriptions Subscription[]
 }
 
 model Training {
@@ -266,23 +274,35 @@ model Attendance {
 }
 
 model Subscription {
-  id            String             @id @default(cuid())
-  traineeId     String
-  createdById   String
-  maxTrainings  Int?
-  validUntil    DateTime?
-  usedTrainings Int                @default(0)
-  isPaid        Boolean            @default(false)
-  notes         String?
-  status        SubscriptionStatus @default(ACTIVE)
-  type          String
+  id           String             @id @default(cuid())
+  traineeId    String
+  createdById  String
+  maxTrainings Int?
+  validUntil   DateTime?
+  notes        String?
+  status       SubscriptionStatus @default(ACTIVE)
+  type         SubscriptionType
+  description  String?
+  isPublic     Boolean            @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  trainee     TraineeProfile @relation(fields: [traineeId], references: [id])
-  createdBy   TrainerProfile @relation(fields: [createdById], references: [id])
-  attendances Attendance[]
+  trainee              TraineeProfile        @relation(fields: [traineeId], references: [id])
+  createdBy            TrainerProfile        @relation(fields: [createdById], references: [id])
+  attendances          Attendance[]
+  groups               Group[]
+  subscriptionTrainees SubscriptionTrainee[]
+}
+
+model SubscriptionTrainee {
+  id            String         @id @default(cuid())
+  traineeId     String
+  trainee       TraineeProfile @relation(fields: [traineeId], references: [id])
+  subscription  Subscription   @relation(fields: [subcriptionId], references: [id])
+  subcriptionId String
+  isPaid        Boolean        @default(false)
+  trainingsLeft Int?
 }
 
 model TrainingTemplate {
