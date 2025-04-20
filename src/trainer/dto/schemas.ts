@@ -73,3 +73,20 @@ export const attachToExistingTrainingBody = zod.object({
 export const attachToExistingTrainingResponse = zod.object({
   status: zod.enum(["added_to_existing_training"]),
 });
+
+export const createGymsBody = zod.object({
+  trainerId: zod.string(),
+  gyms: zod.array(
+    zod.object({
+      name: zod.string(),
+      address: zod.string(),
+      geoLat: zod.number().optional(),
+      geoLng: zod.number().optional(),
+      workHours: zod.string().optional(),
+    }),
+  ),
+});
+
+export const createGymsResponse = zod.object({
+  message: zod.string().optional(),
+});

@@ -14,6 +14,7 @@ import { RefreshDto } from "./dto/refresh.dto";
 import { addMinutes } from "../shared/lib/date";
 import { JwtPayload } from "../common/types/jwt-payload";
 import * as DB from "@prisma/client";
+import { UserId } from "src/kernel/ids";
 
 @Injectable()
 export class AuthService {
@@ -57,7 +58,10 @@ export class AuthService {
     return { message: "Confirmation code sent to your email" };
   }
 
-  async confirmEmail(dto: AuthDto.ConfirmEmailRequest) {
+  async confirmEmail(
+    dto: AuthDto.ConfirmEmailRequest,
+    info: { ip?: string; userAgent?: string } = {},
+  ) {
     const user = await this.db.user.findUnique({
       where: { email: dto.email },
     });
@@ -70,7 +74,7 @@ export class AuthService {
       throw new UnauthorizedException("Invalid confirmation code");
     }
 
-    await this.db.user.update({
+    const updatedUser = await this.db.user.update({
       where: { id: user.id },
       data: {
         isEmailConfirmed: true,
@@ -78,7 +82,24 @@ export class AuthService {
       },
     });
 
-    return { message: "Email confirmed successfully" };
+    const tokens = await this.generateTokens({
+      id: updatedUser.id as UserId,
+      email: updatedUser.email,
+      preferredLang: updatedUser.preferredLang,
+      roles: updatedUser.roles,
+    });
+
+    await this.createRefreshSession({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      ip: info.ip,
+      userAgent: info.userAgent,
+    });
+
+    return {
+      message: "Email confirmed successfully",
+      tokens,
+    };
   }
 
   async login(
@@ -101,12 +122,11 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    console.log("===user===", user);
     const tokens = await this.generateTokens({
-      id: user.id,
+      id: user.id as UserId,
       email: user.email,
       preferredLang: user.preferredLang,
-      activeRole: user.activeRole,
+      roles: user.roles,
     });
 
     await this.createRefreshSession({
@@ -141,10 +161,10 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens({
-      id: user.id,
+      id: user.id as UserId,
       email: user.email,
       preferredLang: user.preferredLang,
-      activeRole: user.activeRole,
+      roles: user.roles,
     });
     await this.updateRefreshSession(session.id, tokens.refreshToken);
 

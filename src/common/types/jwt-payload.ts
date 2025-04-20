@@ -1,6 +1,9 @@
+import * as DB from "@prisma/client";
+import { UserId } from "src/kernel/ids";
+
 export type JwtPayload = {
-  id: string;
+  id: UserId;
   email: string;
   preferredLang?: string;
-  activeRole?: string;
+  roles?: DB.RoleType[];
 };

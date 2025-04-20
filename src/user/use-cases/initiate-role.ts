@@ -18,11 +18,13 @@ export class InitiateRoleUseCase {
 
   async exec({ userId, role }: Command) {
     this.validateSuperAdminRole(role);
-    await this.validateUser({ userId, role });
+    const user = await this.validateUser({ userId, role });
+
+    const newRoles = [...user.roles, role];
 
     await this.db.user.update({
       where: { id: userId },
-      data: { roles: { create: { type: role } }, activeRole: role },
+      data: { roles: newRoles, activeRole: role },
     });
 
     // don't create trainee profile because we already created it in register process
@@ -46,16 +48,17 @@ export class InitiateRoleUseCase {
   private async validateUser({ userId, role }: Command) {
     const user = await this.db.user.findUnique({
       where: { id: userId },
-      include: { roles: true },
     });
 
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    if (user.roles.some((r) => r.type === role)) {
+    if (user.roles.some((r) => r === role)) {
       throw new BadRequestException("User already has this role");
     }
+
+    return user;
   }
 
   private createTrainerProfile(userId: UserId) {

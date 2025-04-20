@@ -54,6 +54,28 @@ export class AuthController {
     return res.json({ accessToken: tokens.accessToken });
   }
 
+  @Post("confirm-email")
+  async confirmEmail(
+    @Body(new ZodPipe(AuthDtoSchemas.confirmEmailBody))
+    body: AuthDto.ConfirmEmailRequest,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const tokens = await this.authService.confirmEmail(body, {
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
+
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, tokens.tokens.refreshToken, {
+      httpOnly: true,
+      secure: this.config.nodeEnv === "production",
+      sameSite: "strict",
+      maxAge: this.config.refreshTokenExpirationMinutes * 60 * 1000,
+    });
+
+    return res.json({ accessToken: tokens.tokens.accessToken });
+  }
+
   @Post("refresh")
   async refresh(
     @Body(new ZodPipe(RefreshDto))

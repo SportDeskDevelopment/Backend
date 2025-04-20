@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { z } from "zod";
-import { LoggedInUser } from "../common/decorators";
+import { LoggedInUser, Roles } from "../common/decorators";
 import { JwtPayload } from "../common/types/jwt-payload";
 import { AttachToExistingUseCase } from "./use-case/attach-to-existing";
 import { CreateTrainerProfileUseCase } from "./use-case/create-trainer-profile";
@@ -10,6 +10,11 @@ import { ScanTraineeQRUseCase } from "./use-case/scan-trainee-qr";
 import { TrainerDtoSchemas } from "./dto";
 import { ResponseValidation, ZodPipe } from "../shared/lib/zod";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { CreateGymsUseCase } from "./use-case/create-gyms";
+import { TrainerDto } from "./dto";
+import * as DB from "@prisma/client";
+import { RolesGuard } from "src/common/guards/role.guard";
+import { UserId } from "src/kernel/ids";
 
 @Controller("trainer")
 export class TrainerController {
@@ -19,6 +24,7 @@ export class TrainerController {
     private readonly scanTraineeQRUseCase: ScanTraineeQRUseCase,
     private readonly scanQRAndCreateTrainingUseCase: ScanQRAndCreateTrainingUseCase,
     private readonly attachToExistingUseCase: AttachToExistingUseCase,
+    private readonly createGymUseCase: CreateGymsUseCase,
   ) {}
 
   @Post("scan-qr")
@@ -66,5 +72,21 @@ export class TrainerController {
       trainingId: body.trainingId,
       traineeUsername: body.traineeUsername,
     });
+  }
+
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post("create-gyms")
+  async createGyms(
+    @Body(new ZodPipe(TrainerDtoSchemas.createGymsBody))
+    body: TrainerDto.CreateGymsRequest,
+  ) {
+    return this.createGymUseCase.exec(body);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("create-trainer")
+  async createTrainer(@LoggedInUser() user: JwtPayload) {
+    return this.createTrainerProfileUseCase.exec({ userId: user.id as UserId });
   }
 }

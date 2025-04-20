@@ -14,7 +14,6 @@ export class UserService {
   async getCurrentUser(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { roles: true },
     });
 
     if (!user) {
@@ -27,7 +26,7 @@ export class UserService {
       name: user.name,
       preferredLang: user.preferredLang,
       activeRole: user.activeRole,
-      roles: user.roles.map((role) => role.type),
+      roles: user.roles,
     };
   }
 
@@ -41,11 +40,11 @@ export class UserService {
   }
 
   async updateActiveRole(userId: string, dto: UserDto.UpdateRoleRequest) {
-    const userRole = await this.prisma.role.findFirst({
-      where: { userId, type: dto.role },
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId },
     });
 
-    if (!userRole) {
+    if (!user.roles.includes(dto.role)) {
       throw new ForbiddenException("User does not have this role");
     }
 

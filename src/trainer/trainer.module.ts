@@ -7,6 +7,7 @@ import { ScanTraineeQRUseCase } from "./use-case/scan-trainee-qr";
 import { ScanQRAndCreateTrainingUseCase } from "./use-case/scan-and-create-training";
 import { AttachToExistingUseCase } from "./use-case/attach-to-existing";
 import { TrainerService } from "./trainer.service";
+import { CreateGymsUseCase } from "./use-case/create-gyms";
 @Module({
   imports: [PrismaModule],
   controllers: [TrainerController],
@@ -17,6 +18,7 @@ import { TrainerService } from "./trainer.service";
     ScanTraineeQRUseCase,
     ScanQRAndCreateTrainingUseCase,
     AttachToExistingUseCase,
+    CreateGymsUseCase,
   ],
 })
 export class TrainerModule {}

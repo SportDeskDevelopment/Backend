@@ -26,3 +26,6 @@ export * from "./scanTraineeResponseTrainingsItem";
 export * from "./traineeNotFoundResponse";
 export * from "./trainerProfile";
 export * from "./trainerProfileId";
+export * from "./createGyms200";
+export * from "./createGymsRequest";
+export * from "./createGymsRequestGymsItem";

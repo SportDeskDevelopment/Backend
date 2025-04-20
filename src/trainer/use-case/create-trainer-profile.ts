@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { UserId } from "../../kernel/ids";
+
 import * as DB from "@prisma/client";
 
 type Command = {
@@ -16,11 +17,13 @@ export class CreateTrainerProfileUseCase {
   constructor(private readonly db: PrismaService) {}
 
   async exec({ userId }: Command) {
-    await this.validateUser(userId);
+    const user = await this.validateUser(userId);
+
+    const newRoles = [...user.roles, DB.RoleType.TRAINER];
 
     await this.db.user.update({
       where: { id: userId },
-      data: { roles: { create: { type: DB.RoleType.TRAINER } } },
+      data: { roles: newRoles },
     });
 
     await this.db.trainerProfile.create({
@@ -31,16 +34,13 @@ export class CreateTrainerProfileUseCase {
   private async validateUser(userId: UserId) {
     const user = await this.db.user.findUnique({
       where: { id: userId },
-      include: { roles: true },
     });
 
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    const isTrainer = user.roles.some(
-      (role) => role.type === DB.RoleType.TRAINER,
-    );
+    const isTrainer = user.roles.some((role) => role === DB.RoleType.TRAINER);
     if (isTrainer) {
       throw new ForbiddenException("User is already a trainer");
     }
@@ -52,5 +52,7 @@ export class CreateTrainerProfileUseCase {
     if (hasTrainerProfile) {
       throw new ForbiddenException("Trainer profile already exists");
     }
+
+    return user;
   }
 }
