@@ -108,8 +108,8 @@ export class TrainerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-trainings")
   async createTrainings(
-    @Body()
-    body: Command,
+    @Body(new ZodPipe(TrainerDtoSchemas.createTrainingsBody))
+    body: TrainerDto.CreateTrainingsRequest,
   ) {
     return this.createTrainingsUseCase.exec(body);
   }

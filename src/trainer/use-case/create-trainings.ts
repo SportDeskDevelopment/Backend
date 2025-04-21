@@ -75,23 +75,18 @@
 //   }
 // }
 
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
+import { TrainerDto } from "../dto";
 
 export type Command = {
-  trainings: Training[];
+  trainings: TrainerDto.TrainingDto[];
   trainerId: string;
-};
-
-export type Training = {
-  name: string;
-  type?: string;
-  startDate?: Date;
-  durationMin?: number;
-  gymId?: string;
-  groupId?: string;
-  templateId?: string;
-  trainerIds?: string[];
 };
 
 type TrainingWindow = {
@@ -108,7 +103,7 @@ export class CreateTrainingsUseCase {
   constructor(private readonly db: PrismaService) {}
 
   async exec(command: Command) {
-    await this.validateTrinings(command.trainings);
+    await this.validateTrainings(command.trainings);
     await this.validateTrainingTime(command.trainings, command.trainerId);
     //TODO CREATE VIA TEMPLATE
 
@@ -135,7 +130,7 @@ export class CreateTrainingsUseCase {
   }
 
   private async validateTrainingTime(
-    newTrainings: Training[],
+    newTrainings: TrainerDto.TrainingDto[],
     trainerId: string,
   ) {
     console.log("🔹 Входящие newTrainings:", newTrainings);
@@ -159,7 +154,7 @@ export class CreateTrainingsUseCase {
     console.log("🔹 Найденные существующие тренировки (existing):", existing);
 
     const allWindows: TrainingWindow[] = [
-      ...existing.map((t) => this.toTrainingWindow(t, "existing")),
+      ...existing.map((t) => this.toTrainingWindow(t as any, "existing")),
       ...planned.map((t) => this.toTrainingWindow(t, "new")),
     ];
     console.log("🔹 Все тренировочные окна (allWindows):", allWindows);
@@ -173,13 +168,15 @@ export class CreateTrainingsUseCase {
           `Пересечение между "${a.name}" (${a.source}) и "${b.name}" (${b.source})`,
       );
       console.log("❌ Конфликты тренировок:", messages);
-      throw new Error("Конфликты тренировок:\n" + messages.join("\n"));
+      throw new BadRequestException(
+        "Конфликты тренировок:\n" + messages.join("\n"),
+      );
     }
 
     console.log("✅ Проверка завершена, пересечений нет.");
   }
 
-  private async validateTrinings(dto: Training[]) {
+  private async validateTrainings(dto: TrainerDto.TrainingDto[]) {
     const gymIds = dto
       .map((e) => e.gymId)
       .filter((id): id is string => id !== undefined);
@@ -279,11 +276,16 @@ export class CreateTrainingsUseCase {
     });
     return groups;
   }
-  private getPlannedTrainings(trainings: Training[]): Training[] {
+  private getPlannedTrainings(
+    trainings: TrainerDto.TrainingDto[],
+  ): TrainerDto.TrainingDto[] {
     return trainings.filter((t) => t.startDate && t.durationMin != null);
   }
 
-  private getTimeRange(training: Training): { start: Date; end: Date } {
+  private getTimeRange(training: TrainerDto.TrainingDto): {
+    start: Date;
+    end: Date;
+  } {
     const start = new Date(training.startDate!);
     const end = new Date(start.getTime() + training.durationMin! * 60_000);
 
@@ -293,7 +295,7 @@ export class CreateTrainingsUseCase {
     };
   }
 
-  private getOverallTimeRange(trainings: Training[]): {
+  private getOverallTimeRange(trainings: TrainerDto.TrainingDto[]): {
     start: Date;
     end: Date;
   } {
@@ -327,7 +329,7 @@ export class CreateTrainingsUseCase {
   }
 
   private toTrainingWindow(
-    training: Training,
+    training: TrainerDto.TrainingDto,
     source: "new" | "existing",
   ): TrainingWindow {
     const { start, end } = this.getTimeRange(training);

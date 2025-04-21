@@ -6,6 +6,50 @@
  */
 import { z as zod } from "zod";
 
+export const createTrainingsBody = zod.object({
+  trainerId: zod.string().describe("ID of the trainer creating the trainings"),
+  trainings: zod
+    .array(
+      zod.object({
+        name: zod.string().describe("Name of the training"),
+        type: zod
+          .enum(["INDIVIDUAL", "GROUP"])
+          .optional()
+          .describe("Type of the training"),
+        startDate: zod
+          .string()
+          .datetime({})
+          .optional()
+          .describe("Start date and time of the training"),
+        durationMin: zod
+          .number()
+          .optional()
+          .describe("Duration of the training in minutes"),
+        gymId: zod
+          .string()
+          .optional()
+          .describe("ID of the gym where training takes place"),
+        groupId: zod
+          .string()
+          .optional()
+          .describe("ID of the group for group training"),
+        templateId: zod
+          .string()
+          .optional()
+          .describe("ID of the training template"),
+        trainerIds: zod
+          .array(zod.string())
+          .optional()
+          .describe("Array of trainer IDs for the training"),
+      }),
+    )
+    .describe("Array of trainings to create"),
+});
+
+export const createTrainingsResponse = zod.object({
+  message: zod.string().optional(),
+});
+
 export const createGymsBody = zod.object({
   trainerId: zod.string(),
   gyms: zod.array(
