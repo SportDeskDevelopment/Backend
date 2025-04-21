@@ -12,6 +12,7 @@ export const registerUserBody = zod.object({
   email: zod.string().email(),
   password: zod.string().min(registerUserBodyPasswordMin),
   name: zod.string(),
+  username: zod.string(),
 });
 
 export const confirmEmailBodyCodeMin = 6;

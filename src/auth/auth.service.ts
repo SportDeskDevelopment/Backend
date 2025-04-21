@@ -40,12 +40,12 @@ export class AuthService {
 
     await this.emailService.sendConfirmationEmail(dto.email, emailConfirmCode);
 
-    // create trainee profile by default and set active role to trainee
     await this.db.user.create({
       data: {
         email: dto.email,
         passwordHash,
         name: dto.name,
+        username: dto.username,
         emailConfirmCode,
         activeRole: DB.RoleType.TRAINEE,
         roles: [DB.RoleType.TRAINEE],
