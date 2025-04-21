@@ -15,6 +15,8 @@ import { TrainerDto } from "./dto";
 import * as DB from "@prisma/client";
 import { RolesGuard } from "src/common/guards/role.guard";
 import { UserId } from "src/kernel/ids";
+import { CreateGroupsUseCase } from "./use-case/create-groups";
+import { Command, CreateTrainingsUseCase } from "./use-case/create-trainings";
 
 @Controller("trainer")
 export class TrainerController {
@@ -25,6 +27,8 @@ export class TrainerController {
     private readonly scanQRAndCreateTrainingUseCase: ScanQRAndCreateTrainingUseCase,
     private readonly attachToExistingUseCase: AttachToExistingUseCase,
     private readonly createGymUseCase: CreateGymsUseCase,
+    private readonly createGroupsUseCase: CreateGroupsUseCase,
+    private readonly createTrainingsUseCase: CreateTrainingsUseCase,
   ) {}
 
   @Post("scan-qr")
@@ -88,5 +92,25 @@ export class TrainerController {
   @Post("create-trainer")
   async createTrainer(@LoggedInUser() user: JwtPayload) {
     return this.createTrainerProfileUseCase.exec({ userId: user.id as UserId });
+  }
+
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post("create-groups")
+  async createGroups(
+    @Body(new ZodPipe(TrainerDtoSchemas.createGroupsBody))
+    body: TrainerDto.CreateGroupsDto,
+  ) {
+    return this.createGroupsUseCase.exec(body);
+  }
+
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post("create-trainings")
+  async createTrainings(
+    @Body()
+    body: Command,
+  ) {
+    return this.createTrainingsUseCase.exec(body);
   }
 }

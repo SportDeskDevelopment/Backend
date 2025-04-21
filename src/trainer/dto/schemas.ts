@@ -6,6 +6,39 @@
  */
 import { z as zod } from "zod";
 
+export const createGymsBody = zod.object({
+  trainerId: zod.string(),
+  gyms: zod.array(
+    zod.object({
+      name: zod.string(),
+      address: zod.string(),
+      geoLat: zod.number().optional(),
+      geoLng: zod.number().optional(),
+      workHours: zod.string().optional(),
+    }),
+  ),
+});
+
+export const createGymsResponse = zod.object({
+  message: zod.string().optional(),
+});
+
+export const createGroupsBody = zod.object({
+  trainerId: zod.string(),
+  groups: zod.array(
+    zod.object({
+      name: zod.string(),
+      gymId: zod.string().optional(),
+      trainerIds: zod.array(zod.string()).optional(),
+      traineeIds: zod.array(zod.string()).optional(),
+    }),
+  ),
+});
+
+export const createGroupsResponse = zod.object({
+  message: zod.string().optional(),
+});
+
 export const getTrainerProfileResponse = zod.object({
   id: zod.string(),
   userId: zod.string(),
@@ -72,21 +105,4 @@ export const attachToExistingTrainingBody = zod.object({
 
 export const attachToExistingTrainingResponse = zod.object({
   status: zod.enum(["added_to_existing_training"]),
-});
-
-export const createGymsBody = zod.object({
-  trainerId: zod.string(),
-  gyms: zod.array(
-    zod.object({
-      name: zod.string(),
-      address: zod.string(),
-      geoLat: zod.number().optional(),
-      geoLng: zod.number().optional(),
-      workHours: zod.string().optional(),
-    }),
-  ),
-});
-
-export const createGymsResponse = zod.object({
-  message: zod.string().optional(),
 });

@@ -8,6 +8,8 @@ import { ScanQRAndCreateTrainingUseCase } from "./use-case/scan-and-create-train
 import { AttachToExistingUseCase } from "./use-case/attach-to-existing";
 import { TrainerService } from "./trainer.service";
 import { CreateGymsUseCase } from "./use-case/create-gyms";
+import { CreateGroupsUseCase } from "./use-case/create-groups";
+import { CreateTrainingsUseCase } from "./use-case/create-trainings";
 @Module({
   imports: [PrismaModule],
   controllers: [TrainerController],
@@ -19,6 +21,8 @@ import { CreateGymsUseCase } from "./use-case/create-gyms";
     ScanQRAndCreateTrainingUseCase,
     AttachToExistingUseCase,
     CreateGymsUseCase,
+    CreateGroupsUseCase,
+    CreateTrainingsUseCase,
   ],
 })
 export class TrainerModule {}
