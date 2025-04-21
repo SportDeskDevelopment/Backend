@@ -78,7 +78,7 @@ model User {
   activeRole       RoleType?
   isEmailConfirmed Boolean   @default(false)
   emailConfirmCode String?
-  username         String?   @unique
+  username         String   @unique
   photoUrl         String?
 
   roles              RoleType[]
