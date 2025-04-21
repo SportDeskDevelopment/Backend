@@ -103,8 +103,17 @@ export class CreateTrainingsUseCase {
   constructor(private readonly db: PrismaService) {}
 
   async exec(command: Command) {
+    const trainer = await this.db.trainerProfile.findUnique({
+      where: { id: command.trainerId },
+    });
+
+    if (!trainer) {
+      throw new NotFoundException("Trainer not found");
+    }
+
     await this.validateTrainings(command.trainings);
     await this.validateTrainingTime(command.trainings, command.trainerId);
+    await this.validateTrainers(command.trainings);
     //TODO CREATE VIA TEMPLATE
 
     const trainings = await this.db.training.createManyAndReturn({
@@ -367,5 +376,26 @@ export class CreateTrainingsUseCase {
     }
 
     return overlaps;
+  }
+
+  private async validateTrainers(trainings: TrainerDto.TrainingDto[]) {
+    const trainerIds = Array.from(
+      new Set(trainings.flatMap((t) => t.trainerIds)),
+    );
+
+    const trainers = await this.db.trainerProfile.findMany({
+      where: { id: { in: trainerIds } },
+    });
+
+    if (trainers.length === trainerIds.length) return;
+
+    const notFoundTrainers = new Set(
+      trainerIds.filter((id) => !trainers.some((t) => t.id === id)),
+    );
+    this.logger.error(
+      `Trainers not found: ${Array.from(notFoundTrainers).join(", ")}`,
+    );
+
+    throw new NotFoundException("Some trainers not found");
   }
 }
