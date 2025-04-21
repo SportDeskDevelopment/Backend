@@ -14,7 +14,7 @@ import { RefreshDto } from "./dto/refresh.dto";
 import { addMinutes } from "../shared/lib/date";
 import { JwtPayload } from "../common/types/jwt-payload";
 import * as DB from "@prisma/client";
-import { UserId } from "src/kernel/ids";
+import { UserId } from "../kernel/ids";
 
 @Injectable()
 export class AuthService {

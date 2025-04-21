@@ -13,8 +13,8 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CreateGymsUseCase } from "./use-case/create-gyms";
 import { TrainerDto } from "./dto";
 import * as DB from "@prisma/client";
-import { RolesGuard } from "src/common/guards/role.guard";
-import { UserId } from "src/kernel/ids";
+import { RolesGuard } from "../common/guards/role.guard";
+import { UserId } from "../kernel/ids";
 import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { Command, CreateTrainingsUseCase } from "./use-case/create-trainings";
 
