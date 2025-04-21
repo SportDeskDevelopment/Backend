@@ -107,25 +107,39 @@ export class CreateTrainingsUseCase {
     await this.validateTrainingTime(command.trainings, command.trainerId);
     //TODO CREATE VIA TEMPLATE
 
-    // await this.db.training.createManyAndReturn({
-    //   data: {
-    //     name: command.name,
-    //     type: command.type as any,
-    //     startDate: command.startDate,
-    //     durationMin: command.durationMin,
-    //     gymId: command.gymId ?? null,
-    //     groupId: command.groupId ?? null,
-    //     templateId: command.templateId ?? null,
-    //     trainers: command.trainerIds
-    //       ? {
-    //           connect: command.trainerIds.map((id) => ({ id })),
-    //         }
-    //       : undefined,
-    //   },
-    // });
+    const trainings = await this.db.training.createManyAndReturn({
+      data: command.trainings.map((t) => ({
+        name: t.name,
+        type: t.type,
+        startDate: t.startDate,
+        durationMin: t.durationMin,
+        gymId: t.gymId,
+        groupId: t.groupId,
+        templateId: t.templateId,
+      })),
+    });
+
+    const results = await Promise.allSettled(
+      trainings.map((t) =>
+        this.db.training.update({
+          where: { id: t.id },
+          data: {
+            trainers: {
+              connect: [{ id: command.trainerId }],
+            },
+          },
+        }),
+      ),
+    );
+
+    results.forEach((r) => {
+      if (r.status === "rejected") {
+        this.logger.error("🔹 Ошибка при обновлении тренировки:", r.reason);
+      }
+    });
 
     return {
-      message: "Training created successfully",
+      message: "Trainings created successfully",
     };
   }
 
@@ -276,6 +290,7 @@ export class CreateTrainingsUseCase {
     });
     return groups;
   }
+
   private getPlannedTrainings(
     trainings: TrainerDto.TrainingDto[],
   ): TrainerDto.TrainingDto[] {
@@ -289,10 +304,7 @@ export class CreateTrainingsUseCase {
     const start = new Date(training.startDate!);
     const end = new Date(start.getTime() + training.durationMin! * 60_000);
 
-    return {
-      start: new Date(start.getTime()),
-      end: new Date(end.getTime()),
-    };
+    return { start, end };
   }
 
   private getOverallTimeRange(trainings: TrainerDto.TrainingDto[]): {
@@ -318,12 +330,10 @@ export class CreateTrainingsUseCase {
     trainerId: string,
     timeRange: { start: Date; end: Date },
   ) {
-    const lookBack = new Date(timeRange.start.getTime() - 24 * 60 * 60 * 1000);
-
     return this.db.training.findMany({
       where: {
         trainers: { some: { id: trainerId } },
-        startDate: { gte: lookBack, lte: timeRange.end },
+        startDate: { gte: timeRange.start, lte: timeRange.end },
       },
     });
   }
@@ -342,7 +352,7 @@ export class CreateTrainingsUseCase {
   }
 
   private findOverlaps(windows: TrainingWindow[]) {
-    const sorted = [...windows].sort(
+    const sorted = windows.toSorted(
       (a, b) => a.start.getTime() - b.start.getTime(),
     );
     const overlaps: { a: TrainingWindow; b: TrainingWindow }[] = [];
