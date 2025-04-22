@@ -114,6 +114,10 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
+    if (!user.isEmailConfirmed) {
+      throw new UnauthorizedException("Email is not Confirmed.");
+    }
+
     const isPasswordValid = await bcrypt.compare(
       dto.password,
       user.passwordHash,

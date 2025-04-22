@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { TrainingDtoType } from "./trainingDtoType";
+import type { TrainingDtoTimeSlotsItem } from "./trainingDtoTimeSlotsItem";
 
 export interface TrainingDto {
   /** Name of the training */
@@ -23,4 +24,8 @@ export interface TrainingDto {
   templateId?: string;
   /** Array of trainer IDs for the training */
   trainerIds?: string[];
+  /** Flag to indicate if the training should be saved as a template */
+  isSaveAsTemplate?: boolean;
+  /** Recurring time slots for the training */
+  timeSlots?: TrainingDtoTimeSlotsItem[];
 }

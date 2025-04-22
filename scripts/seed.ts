@@ -38,6 +38,7 @@ async function main() {
       roles: [RoleType.TRAINER],
       trainerProfile: {
         create: {
+          id: "cm9svevvc0003ud5k913mldd4",
           currentPlan: PlanType.PREMIUM,
           planStartedAt: new Date(),
           planUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days

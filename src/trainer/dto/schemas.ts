@@ -41,6 +41,24 @@ export const createTrainingsBody = zod.object({
           .array(zod.string())
           .optional()
           .describe("Array of trainer IDs for the training"),
+        isSaveAsTemplate: zod
+          .boolean()
+          .optional()
+          .describe(
+            "Flag to indicate if the training should be saved as a template",
+          ),
+        timeSlots: zod
+          .array(
+            zod.object({
+              dayOfTheWeek: zod
+                .string()
+                .describe("Day of the week (e.g., Monday, Tuesday)"),
+              hours: zod.number().describe("Hour in 24h format"),
+              minutes: zod.number().describe("Minutes past the hour"),
+            }),
+          )
+          .optional()
+          .describe("Recurring time slots for the training"),
       }),
     )
     .describe("Array of trainings to create"),

@@ -38,3 +38,4 @@ export * from "./trainerProfile";
 export * from "./trainerProfileId";
 export * from "./trainingDto";
 export * from "./trainingDtoType";
+export * from "./trainingDtoTimeSlotsItem";
