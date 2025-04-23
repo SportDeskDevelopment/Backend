@@ -5,7 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type CreateContactInformationSocialsItem = {
+export type PersistContactInformationSocialsItem = {
   name: string;
   url: string;
 };

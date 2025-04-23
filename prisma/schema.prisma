@@ -102,7 +102,7 @@ model TrainerProfile {
   trainingSince   Int?
   sports          Sports[]       @default([])
   publicContactId String?
-  publicContact   PublicContact? @relation(fields: [publicContactId], references: [id])
+  publicContact   PublicInfo? @relation(fields: [publicContactId], references: [id])
 
   groups           Group[]              @relation("GroupTrainers")
   gyms             Gym[]                @relation("TrainerGyms")
@@ -355,19 +355,20 @@ model RefreshSession {
   @@index([tokenHash])
 }
 
-model PublicContact {
+model PublicInfo {
   id             String                @id @default(cuid())
   phoneNumbers   String[]              @default([])
   emails         String[]              @default([])
+  aboutMe        String?
   socials        PublicSocialNetwork[]
-  TrainerProfile TrainerProfile[]
+  trainerProfile TrainerProfile[]
 }
 
 model SocialNetwork {
   id                  String                @id @default(cuid())
   name                String                @unique
   icon                String?
-  PublicSocialNetwork PublicSocialNetwork[]
+  publicSocialNetwork PublicSocialNetwork[]
 }
 
 model PublicSocialNetwork {
@@ -376,6 +377,6 @@ model PublicSocialNetwork {
   socialNetworkId String
   url             String
 
-  publicContact PublicContact @relation(fields: [publicContactId], references: [id])
+  publicContact PublicInfo @relation(fields: [publicContactId], references: [id])
   socialNetwork SocialNetwork @relation(fields: [socialNetworkId], references: [id])
 }

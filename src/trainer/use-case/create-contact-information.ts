@@ -1,12 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import * as DB from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
-import { CreateContactInformation } from "../dto/objects";
 import { TrainerService } from "../trainer.service";
+import { TrainerDto } from "../dto";
 
 @Injectable()
-export class CreateContactInformationUseCase {
-  private readonly logger = new Logger(CreateContactInformationUseCase.name);
+export class PersistContactInformationUseCase {
+  private readonly logger = new Logger(PersistContactInformationUseCase.name);
   private publicContactId: string;
 
   constructor(
@@ -14,7 +14,7 @@ export class CreateContactInformationUseCase {
     private readonly trainerService: TrainerService,
   ) {}
 
-  async exec(command: CreateContactInformation) {
+  async exec(command: TrainerDto.PersistContactInformation) {
     const trainer = await this.trainerService.validateTrainer(
       command.trainerId,
     );
@@ -29,7 +29,7 @@ export class CreateContactInformationUseCase {
 
   private async createPublicContact(
     trainer: DB.TrainerProfile,
-    command: CreateContactInformation,
+    command: TrainerDto.PersistContactInformation,
   ) {
     if (trainer.publicContactId) return;
 
@@ -57,29 +57,28 @@ export class CreateContactInformationUseCase {
 
   private async updatePublicContact(
     trainer: DB.TrainerProfile,
-    command: CreateContactInformation,
+    command: TrainerDto.PersistContactInformation,
   ) {
     if (!trainer.publicContactId) return;
 
     this.publicContactId = trainer.publicContactId;
 
-    await this.db.publicContact.update({
+    await this.db.publicInfo.update({
       where: { id: trainer.publicContactId },
       data: {
         emails: command.emails,
         phoneNumbers: command.phoneNumbers,
+        aboutMe: command.aboutMe,
       },
     });
   }
 
-  private async manageSocials(command: CreateContactInformation) {
-    await this.db.publicContact.update({
+  private async manageSocials(command: TrainerDto.PersistContactInformation) {
+    await this.db.publicInfo.update({
       where: { id: this.publicContactId },
       data: {
         socials: {
-          deleteMany: {
-            // publicContactId: trainer.publicContactId,
-          },
+          deleteMany: {},
           create: command.socials?.map((s) => ({
             url: s.url,
             socialNetwork: {

@@ -5,6 +5,6 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type CreateContactInformation200 = {
+export type PersistContactInformation200 = {
   message?: string;
 };

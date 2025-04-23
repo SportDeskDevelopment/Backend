@@ -101,10 +101,11 @@ export const createGroupsResponse = zod.object({
   message: zod.string().optional(),
 });
 
-export const createContactInformationBody = zod.object({
+export const persistContactInformationBody = zod.object({
   trainerId: zod.string(),
   emails: zod.array(zod.string()).optional(),
   phoneNumbers: zod.array(zod.string()).optional(),
+  aboutMe: zod.string().optional(),
   socials: zod
     .array(
       zod.object({
@@ -115,7 +116,7 @@ export const createContactInformationBody = zod.object({
     .optional(),
 });
 
-export const createContactInformationResponse = zod.object({
+export const persistContactInformationResponse = zod.object({
   message: zod.string().optional(),
 });
 
