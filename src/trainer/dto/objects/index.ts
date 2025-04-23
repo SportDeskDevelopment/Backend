@@ -8,6 +8,9 @@
 export * from "./attachToTrainingRequest";
 export * from "./attachToTrainingResponse";
 export * from "./attachToTrainingResponseStatus";
+export * from "./createContactInformation";
+export * from "./createContactInformation200";
+export * from "./createContactInformationSocialsItem";
 export * from "./createGroups200";
 export * from "./createGroupsDto";
 export * from "./createGroupsDtoGroupsItem";
@@ -37,5 +40,5 @@ export * from "./traineeNotFoundResponse";
 export * from "./trainerProfile";
 export * from "./trainerProfileId";
 export * from "./trainingDto";
-export * from "./trainingDtoType";
 export * from "./trainingDtoTimeSlotsItem";
+export * from "./trainingDtoType";

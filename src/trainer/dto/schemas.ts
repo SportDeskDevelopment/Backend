@@ -101,6 +101,24 @@ export const createGroupsResponse = zod.object({
   message: zod.string().optional(),
 });
 
+export const createContactInformationBody = zod.object({
+  trainerId: zod.string(),
+  emails: zod.array(zod.string()).optional(),
+  phoneNumbers: zod.array(zod.string()).optional(),
+  socials: zod
+    .array(
+      zod.object({
+        name: zod.string(),
+        url: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+export const createContactInformationResponse = zod.object({
+  message: zod.string().optional(),
+});
+
 export const getTrainerProfileResponse = zod.object({
   id: zod.string(),
   userId: zod.string(),

@@ -78,7 +78,7 @@ model User {
   activeRole       RoleType?
   isEmailConfirmed Boolean   @default(false)
   emailConfirmCode String?
-  username         String   @unique
+  username         String    @unique
   photoUrl         String?
 
   roles              RoleType[]
@@ -356,17 +356,26 @@ model RefreshSession {
 }
 
 model PublicContact {
-  id             String           @id @default(cuid())
-  phoneNumbers   String[]         @default([])
-  emails         String[]         @default([])
-  socials        SocialNetwork[]  @relation("SocialPublicContacts")
+  id             String                @id @default(cuid())
+  phoneNumbers   String[]              @default([])
+  emails         String[]              @default([])
+  socials        PublicSocialNetwork[]
   TrainerProfile TrainerProfile[]
 }
 
 model SocialNetwork {
-  id             String          @id @default(cuid())
-  name           String
-  url            String
-  icon           String?
-  publicContacts PublicContact[] @relation("SocialPublicContacts")
+  id                  String                @id @default(cuid())
+  name                String                @unique
+  icon                String?
+  PublicSocialNetwork PublicSocialNetwork[]
+}
+
+model PublicSocialNetwork {
+  id              String @id @default(cuid())
+  publicContactId String
+  socialNetworkId String
+  url             String
+
+  publicContact PublicContact @relation(fields: [publicContactId], references: [id])
+  socialNetwork SocialNetwork @relation(fields: [socialNetworkId], references: [id])
 }

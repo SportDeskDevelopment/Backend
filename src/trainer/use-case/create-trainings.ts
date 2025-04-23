@@ -39,40 +39,7 @@ export class CreateTrainingsUseCase {
     await this.validateTrainings(command.trainings);
     await this.validateTrainingTime(command.trainings, command.trainerId);
     await this.validateTrainers(command.trainings);
-
-    const templateTrainings = command.trainings.filter(
-      (t) => t.isSaveAsTemplate,
-    );
-
-    if (templateTrainings.length > 0) {
-      const createdTemplates =
-        await this.db.trainingTemplate.createManyAndReturn({
-          data: templateTrainings.map((t) => ({
-            trainingName: t.name,
-            type: t.type ?? TrainingDtoType.GROUP,
-            startDate: new Date(),
-            durationMin: t.durationMin,
-            gymId: t.gymId,
-            groupId: t.groupId,
-            trainerId: command.trainerId,
-          })),
-        });
-
-      await Promise.all(
-        templateTrainings.map((template, index) => {
-          console.log(!template.timeSlots, template);
-          if (!template.timeSlots?.length) return;
-          return this.db.timeSlot.createManyAndReturn({
-            data: template.timeSlots.map((template) => ({
-              dayOfWeek: template.dayOfTheWeek as DB.WeekDay,
-              hours: template.hours,
-              minutes: template.minutes,
-              templateId: createdTemplates[index].id,
-            })),
-          });
-        }),
-      );
-    }
+    await this.createTrainingTemplates(command);
 
     const trainings = await this.db.training.createManyAndReturn({
       data: command.trainings.map((t) => ({
@@ -355,5 +322,39 @@ export class CreateTrainingsUseCase {
     );
 
     throw new NotFoundException("Some trainers not found");
+  }
+
+  private async createTrainingTemplates(dto: Command) {
+    const templateTrainings = dto.trainings.filter((t) => t.isSaveAsTemplate);
+
+    if (templateTrainings.length > 0) {
+      const createdTemplates =
+        await this.db.trainingTemplate.createManyAndReturn({
+          data: templateTrainings.map((t) => ({
+            trainingName: t.name,
+            type: t.type ?? TrainingDtoType.GROUP,
+            startDate: new Date(),
+            durationMin: t.durationMin,
+            gymId: t.gymId,
+            groupId: t.groupId,
+            trainerId: dto.trainerId,
+          })),
+        });
+
+      await Promise.all(
+        templateTrainings.map((template, index) => {
+          console.log(!template.timeSlots, template);
+          if (!template.timeSlots?.length) return;
+          return this.db.timeSlot.createManyAndReturn({
+            data: template.timeSlots.map((template) => ({
+              dayOfWeek: template.dayOfTheWeek as DB.WeekDay,
+              hours: template.hours,
+              minutes: template.minutes,
+              templateId: createdTemplates[index].id,
+            })),
+          });
+        }),
+      );
+    }
   }
 }

@@ -10,6 +10,7 @@ import { TrainerService } from "./trainer.service";
 import { CreateGymsUseCase } from "./use-case/create-gyms";
 import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { CreateTrainingsUseCase } from "./use-case/create-trainings";
+import { CreateContactInformationUseCase } from "./use-case/create-contact-information";
 @Module({
   imports: [PrismaModule],
   controllers: [TrainerController],
@@ -23,6 +24,7 @@ import { CreateTrainingsUseCase } from "./use-case/create-trainings";
     CreateGymsUseCase,
     CreateGroupsUseCase,
     CreateTrainingsUseCase,
+    CreateContactInformationUseCase,
   ],
 })
 export class TrainerModule {}

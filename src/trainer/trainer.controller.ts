@@ -16,7 +16,8 @@ import * as DB from "@prisma/client";
 import { RolesGuard } from "../common/guards/role.guard";
 import { UserId } from "../kernel/ids";
 import { CreateGroupsUseCase } from "./use-case/create-groups";
-import { Command, CreateTrainingsUseCase } from "./use-case/create-trainings";
+import { CreateTrainingsUseCase } from "./use-case/create-trainings";
+import { CreateContactInformationUseCase } from "./use-case/create-contact-information";
 
 @Controller("trainer")
 export class TrainerController {
@@ -29,6 +30,7 @@ export class TrainerController {
     private readonly createGymUseCase: CreateGymsUseCase,
     private readonly createGroupsUseCase: CreateGroupsUseCase,
     private readonly createTrainingsUseCase: CreateTrainingsUseCase,
+    private readonly createContactInformationUseCase: CreateContactInformationUseCase,
   ) {}
 
   @Post("scan-qr")
@@ -112,5 +114,14 @@ export class TrainerController {
     body: TrainerDto.CreateTrainingsRequest,
   ) {
     return this.createTrainingsUseCase.exec(body);
+  }
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post("create-contact-information")
+  async createContactinformation(
+    @Body(new ZodPipe(TrainerDtoSchemas.createContactInformationBody))
+    body: TrainerDto.CreateContactInformation,
+  ) {
+    return this.createContactInformationUseCase.exec(body);
   }
 }

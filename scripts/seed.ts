@@ -265,6 +265,27 @@ async function main() {
   });
 
   console.log("Seed data created successfully");
+
+  // Seed Social Networks
+  const socialNetworks = [
+    { name: "Instagram", icon: "instagram-icon.svg" },
+    { name: "X (Twitter)", icon: "twitter-icon.svg" },
+    { name: "Facebook", icon: "facebook-icon.svg" },
+    { name: "Telegram", icon: "telegram-icon.svg" },
+    { name: "TikTok", icon: "tiktok-icon.svg" },
+    { name: "LinkedIn", icon: "linkedin-icon.svg" },
+  ];
+
+  for (const social of socialNetworks) {
+    await prisma.socialNetwork.upsert({
+      where: { name: social.name },
+      update: { icon: social.icon },
+      create: {
+        name: social.name,
+        icon: social.icon,
+      },
+    });
+  }
 }
 
 main()
