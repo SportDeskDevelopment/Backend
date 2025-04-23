@@ -30,4 +30,16 @@ export class TrainerService {
 
     return trainer;
   }
+
+  async validateTrainer(id: string) {
+    const trainer = await this.db.trainerProfile.findUnique({
+      where: { id },
+    });
+
+    if (!trainer) {
+      throw new NotFoundException(`Trainer with id: ${id} not found`);
+    }
+
+    return trainer;
+  }
 }

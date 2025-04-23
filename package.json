@@ -18,7 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "generate:api": "orval"
+    "generate:api": "orval",
+    "db:reset": "npx prisma migrate reset --force",
+    "db:init": "npx prisma migrate dev && npx prisma db seed"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
