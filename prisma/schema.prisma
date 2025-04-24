@@ -87,7 +87,7 @@ model User {
   parentProfile      ParentProfile?
   adminProfile       AdminProfile?
   telegramLink       TelegramLink?
-  scannedAttendances Attendance[]     @relation("ScannedByUser")
+  createdAttendances Attendance[]     @relation("createdBy")
   refreshSessions    RefreshSession[]
 
   createdAt DateTime @default(now())
@@ -120,7 +120,7 @@ model TrainerProfile {
   limits TrainerLimits?
 
   trainings           Training[]   @relation("TrainingTrainers")
-  attendancesMarkedBy Attendance[] @relation("MarkedByTrainer")
+  attendancesMarkedBy Attendance[] @relation("MarkedAsPaidByTrainer")
 }
 
 model TrainerLimits {
@@ -265,17 +265,17 @@ model Attendance {
   trainingId              String
   status                  AttendanceStatus @default(PRESENT)
   markedAt                DateTime         @default(now())
-  markedByUserId          String?
-  subscriptionId          String? // если списано по абонементу
+  createdByUserId         String? // кто отметил посещение (или кто сосканировал QR-код)
+  subscriptionTraineeId   String? // если списано по абонементу
   paymentId               String? // если оплачено напрямую
   markedAsPaidByTrainerId String? // если тренер сам отметил 
 
-  trainee         TraineeProfile  @relation(fields: [traineeId], references: [id])
-  training        Training        @relation(fields: [trainingId], references: [id])
-  markedBy        User?           @relation("ScannedByUser", fields: [markedByUserId], references: [id])
-  subscription    Subscription?   @relation(fields: [subscriptionId], references: [id])
-  payment         Payment?        @relation(fields: [paymentId], references: [id])
-  markedByTrainer TrainerProfile? @relation(fields: [markedAsPaidByTrainerId], references: [id], name: "MarkedByTrainer")
+  trainee               TraineeProfile       @relation(fields: [traineeId], references: [id])
+  training              Training             @relation(fields: [trainingId], references: [id])
+  createdBy             User?                @relation("createdBy", fields: [createdByUserId], references: [id])
+  subscriptionTrainee   SubscriptionTrainee? @relation(fields: [subscriptionTraineeId], references: [id])
+  payment               Payment?             @relation(fields: [paymentId], references: [id])
+  markedAsPaidByTrainer TrainerProfile?      @relation(fields: [markedAsPaidByTrainerId], references: [id], name: "MarkedAsPaidByTrainer")
 }
 
 model Payment {
@@ -303,22 +303,22 @@ model Subscription {
 
   trainee              TraineeProfile        @relation(fields: [traineeId], references: [id])
   createdBy            TrainerProfile        @relation(fields: [createdById], references: [id])
-  attendances          Attendance[]
   groups               Group[]
   subscriptionTrainees SubscriptionTrainee[]
 }
 
 model SubscriptionTrainee {
-  id             String         @id @default(cuid())
+  id             String  @id @default(cuid())
   traineeId      String
-  trainee        TraineeProfile @relation(fields: [traineeId], references: [id])
-  subscription   Subscription   @relation(fields: [subscriptionId], references: [id])
   subscriptionId String
-  isPaid         Boolean        @default(false)
+  isPaid         Boolean @default(false)
   trainingsLeft  Int?
+  paymentId      String?
 
-  paymentId String?
-  payment   Payment? @relation(fields: [paymentId], references: [id])
+  trainee      TraineeProfile @relation(fields: [traineeId], references: [id])
+  subscription Subscription   @relation(fields: [subscriptionId], references: [id])
+  payment      Payment?       @relation(fields: [paymentId], references: [id])
+  attendances  Attendance[]
 }
 
 model TrainingTemplate {

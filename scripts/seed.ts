@@ -256,7 +256,7 @@ async function main() {
           id: training.id,
         },
       },
-      markedBy: {
+      createdBy: {
         connect: {
           id: trainerUser.id,
         },
