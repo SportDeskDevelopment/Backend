@@ -260,14 +260,14 @@ model Training {
 }
 
 model Attendance {
-  id                String           @id @default(cuid())
-  traineeId         String
-  trainingId        String
-  status            AttendanceStatus @default(PRESENT)
-  markedAt          DateTime         @default(now())
-  markedByUserId    String?
-  subscriptionId    String? // если списано по абонементу
-  paymentId         String? // если оплачено напрямую
+  id                      String           @id @default(cuid())
+  traineeId               String
+  trainingId              String
+  status                  AttendanceStatus @default(PRESENT)
+  markedAt                DateTime         @default(now())
+  markedByUserId          String?
+  subscriptionId          String? // если списано по абонементу
+  paymentId               String? // если оплачено напрямую
   markedAsPaidByTrainerId String? // если тренер сам отметил @map("markedByTrainerId")
 
   trainee         TraineeProfile  @relation(fields: [traineeId], references: [id])
