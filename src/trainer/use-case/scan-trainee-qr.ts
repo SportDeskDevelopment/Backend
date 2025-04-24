@@ -56,7 +56,7 @@ export class ScanTraineeQRUseCase {
       data: {
         traineeId: trainee.id,
         trainingId: activeTraining.id,
-        scannedByUserId: command.trainerUserId,
+        createdByUserId: command.trainerUserId,
       },
     });
 
