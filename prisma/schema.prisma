@@ -268,14 +268,14 @@ model Attendance {
   markedByUserId    String?
   subscriptionId    String? // если списано по абонементу
   paymentId         String? // если оплачено напрямую
-  markedByTrainerId String? // если тренер сам отметил
+  markedAsPaidByTrainerId String? // если тренер сам отметил @map("markedByTrainerId")
 
   trainee         TraineeProfile  @relation(fields: [traineeId], references: [id])
   training        Training        @relation(fields: [trainingId], references: [id])
   markedBy        User?           @relation("ScannedByUser", fields: [markedByUserId], references: [id])
   subscription    Subscription?   @relation(fields: [subscriptionId], references: [id])
   payment         Payment?        @relation(fields: [paymentId], references: [id])
-  markedByTrainer TrainerProfile? @relation(fields: [markedByTrainerId], references: [id], name: "MarkedByTrainer")
+  markedByTrainer TrainerProfile? @relation(fields: [markedAsPaidByTrainerId], references: [id], name: "MarkedByTrainer")
 }
 
 model Payment {

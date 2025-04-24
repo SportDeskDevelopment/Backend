@@ -6,7 +6,7 @@
 */
 -- AlterTable
 ALTER TABLE "Attendance" DROP COLUMN "isPaidByTrainer",
-ADD COLUMN     "markedByTrainerId" TEXT;
+ADD COLUMN     "markedAsPaidByTrainerId" TEXT;
 
 -- AddForeignKey
-ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_markedByTrainerId_fkey" FOREIGN KEY ("markedByTrainerId") REFERENCES "TrainerProfile"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_markedAsPaidByTrainerId_fkey" FOREIGN KEY ("markedAsPaidByTrainerId") REFERENCES "TrainerProfile"("id") ON DELETE SET NULL ON UPDATE CASCADE;
