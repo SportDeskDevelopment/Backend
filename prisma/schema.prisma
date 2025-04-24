@@ -110,6 +110,7 @@ model TrainerProfile {
   planStartedAt    DateTime?
   planUntil        DateTime?
   trialActivatedAt DateTime?
+  qrCodeKey        String?
 
   limits TrainerLimits?
 
@@ -244,6 +245,7 @@ model Training {
   gymId       String?
   groupId     String?
   templateId  String?
+  price       Float?
 
   gym         Gym?              @relation(fields: [gymId], references: [id])
   group       Group?            @relation(fields: [groupId], references: [id])
@@ -317,11 +319,12 @@ model SubscriptionTrainee {
 }
 
 model TrainingTemplate {
-  id           String  @id @default(cuid())
-  groupId      String?
-  trainerId    String
-  gymId        String?
-  trainingName String?
+  id            String  @id @default(cuid())
+  groupId       String?
+  trainerId     String
+  gymId         String?
+  trainingName  String?
+  trainingPrice Float?
 
   durationMin Int
   type        TrainingType
