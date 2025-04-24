@@ -35,12 +35,6 @@ enum PlanType {
   LIMITED
 }
 
-enum SubscriptionStatus {
-  ACTIVE
-  EXPIRED
-  USED_UP
-}
-
 enum TrainingType {
   GROUP
   INDIVIDUAL
@@ -154,7 +148,6 @@ model TraineeProfile {
   user   User   @relation(fields: [userId], references: [id])
 
   groups               Group[]               @relation("TraineeGroups")
-  subscriptions        Subscription[]
   attendances          Attendance[]
   parents              ParentTraineeLink[]
   trainers             TrainerTraineeLink[]
@@ -287,33 +280,35 @@ model Payment {
 }
 
 model Subscription {
-  id           String             @id @default(cuid())
-  traineeId    String
+  id           String           @id @default(cuid())
   createdById  String
   maxTrainings Int?
-  validUntil   DateTime?
+  maxDays      Int?
+  price        Float?
   notes        String?
-  status       SubscriptionStatus @default(ACTIVE)
   type         SubscriptionType
-  description  String?
-  isPublic     Boolean            @default(true)
+  isPublic     Boolean          @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  trainee              TraineeProfile        @relation(fields: [traineeId], references: [id])
   createdBy            TrainerProfile        @relation(fields: [createdById], references: [id])
   groups               Group[]
   subscriptionTrainees SubscriptionTrainee[]
 }
 
 model SubscriptionTrainee {
-  id             String  @id @default(cuid())
+  id             String    @id @default(cuid())
   traineeId      String
   subscriptionId String
-  isPaid         Boolean @default(false)
+  isPaid         Boolean   @default(false)
   trainingsLeft  Int?
   paymentId      String?
+  validUntil     DateTime?
+  activatedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   trainee      TraineeProfile @relation(fields: [traineeId], references: [id])
   subscription Subscription   @relation(fields: [subscriptionId], references: [id])

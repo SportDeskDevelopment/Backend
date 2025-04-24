@@ -4,6 +4,7 @@ import {
   PlanType,
   TrainingType,
   WeekDay,
+  SubscriptionType,
 } from "@prisma/client";
 import bcrypt from "bcrypt";
 
@@ -181,19 +182,13 @@ async function main() {
   // Create subscription
   await prisma.subscription.create({
     data: {
-      trainee: {
-        connect: {
-          id: traineeUser.traineeProfile!.id,
-        },
-      },
       createdBy: {
         connect: {
           id: trainerUser.trainerProfile!.id,
         },
       },
       maxTrainings: 12,
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      type: "PERIOD",
+      type: SubscriptionType.PERIOD,
     },
   });
 
