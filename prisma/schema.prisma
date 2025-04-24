@@ -119,7 +119,8 @@ model TrainerProfile {
 
   limits TrainerLimits?
 
-  trainings Training[] @relation("TrainingTrainers")
+  trainings           Training[]   @relation("TrainingTrainers")
+  attendancesMarkedBy Attendance[] @relation("MarkedByTrainer")
 }
 
 model TrainerLimits {
@@ -259,21 +260,22 @@ model Training {
 }
 
 model Attendance {
-  id              String           @id @default(cuid())
-  traineeId       String
-  trainingId      String
-  status          AttendanceStatus @default(PRESENT)
-  markedAt        DateTime         @default(now())
-  markedByUserId  String?
-  subscriptionId  String? // если списано по абонементу
-  paymentId       String? // если оплачено напрямую
-  isPaidByTrainer Boolean          @default(false) // если тренер сам отметил
+  id                String           @id @default(cuid())
+  traineeId         String
+  trainingId        String
+  status            AttendanceStatus @default(PRESENT)
+  markedAt          DateTime         @default(now())
+  markedByUserId    String?
+  subscriptionId    String? // если списано по абонементу
+  paymentId         String? // если оплачено напрямую
+  markedByTrainerId String? // если тренер сам отметил
 
-  trainee      TraineeProfile @relation(fields: [traineeId], references: [id])
-  training     Training       @relation(fields: [trainingId], references: [id])
-  markedBy     User?          @relation("ScannedByUser", fields: [markedByUserId], references: [id])
-  subscription Subscription?  @relation(fields: [subscriptionId], references: [id])
-  payment      Payment?       @relation(fields: [paymentId], references: [id])
+  trainee         TraineeProfile  @relation(fields: [traineeId], references: [id])
+  training        Training        @relation(fields: [trainingId], references: [id])
+  markedBy        User?           @relation("ScannedByUser", fields: [markedByUserId], references: [id])
+  subscription    Subscription?   @relation(fields: [subscriptionId], references: [id])
+  payment         Payment?        @relation(fields: [paymentId], references: [id])
+  markedByTrainer TrainerProfile? @relation(fields: [markedByTrainerId], references: [id], name: "MarkedByTrainer")
 }
 
 model Payment {
