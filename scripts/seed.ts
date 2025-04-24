@@ -256,15 +256,13 @@ async function main() {
           id: training.id,
         },
       },
-      scannedBy: {
+      markedBy: {
         connect: {
           id: trainerUser.id,
         },
       },
     },
   });
-
-  console.log("Seed data created successfully");
 
   // Seed Social Networks
   const socialNetworks = [
@@ -286,6 +284,7 @@ async function main() {
       },
     });
   }
+  console.log("Seed data created successfully");
 }
 
 main()
