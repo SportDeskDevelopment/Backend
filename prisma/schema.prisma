@@ -268,7 +268,7 @@ model Attendance {
   markedByUserId          String?
   subscriptionId          String? // если списано по абонементу
   paymentId               String? // если оплачено напрямую
-  markedAsPaidByTrainerId String? // если тренер сам отметил @map("markedByTrainerId")
+  markedAsPaidByTrainerId String? // если тренер сам отметил 
 
   trainee         TraineeProfile  @relation(fields: [traineeId], references: [id])
   training        Training        @relation(fields: [trainingId], references: [id])
