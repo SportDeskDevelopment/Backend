@@ -95,12 +95,12 @@ model User {
 }
 
 model TrainerProfile {
-  id              String         @id @default(cuid())
-  userId          String         @unique
-  user            User           @relation(fields: [userId], references: [id])
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id])
   description     String?
   trainingSince   Int?
-  sports          Sports[]       @default([])
+  sports          Sports[]    @default([])
   publicContactId String?
   publicContact   PublicInfo? @relation(fields: [publicContactId], references: [id])
 
@@ -264,13 +264,24 @@ model Attendance {
   trainingId      String
   status          AttendanceStatus @default(PRESENT)
   markedAt        DateTime         @default(now())
-  scannedByUserId String?
-  subscriptionId  String?
+  markedByUserId  String?
+  subscriptionId  String? // если списано по абонементу
+  paymentId       String? // если оплачено напрямую
+  isPaidByTrainer Boolean          @default(false) // если тренер сам отметил
 
   trainee      TraineeProfile @relation(fields: [traineeId], references: [id])
   training     Training       @relation(fields: [trainingId], references: [id])
-  scannedBy    User?          @relation("ScannedByUser", fields: [scannedByUserId], references: [id])
+  markedBy     User?          @relation("ScannedByUser", fields: [markedByUserId], references: [id])
   subscription Subscription?  @relation(fields: [subscriptionId], references: [id])
+  payment      Payment?       @relation(fields: [paymentId], references: [id])
+}
+
+model Payment {
+  id String @id @default(cuid())
+  // TODO: add payment details
+
+  attendances          Attendance[]
+  traineeSubscriptions SubscriptionTrainee[]
 }
 
 model Subscription {
@@ -296,13 +307,16 @@ model Subscription {
 }
 
 model SubscriptionTrainee {
-  id            String         @id @default(cuid())
-  traineeId     String
-  trainee       TraineeProfile @relation(fields: [traineeId], references: [id])
-  subscription  Subscription   @relation(fields: [subcriptionId], references: [id])
-  subcriptionId String
-  isPaid        Boolean        @default(false)
-  trainingsLeft Int?
+  id             String         @id @default(cuid())
+  traineeId      String
+  trainee        TraineeProfile @relation(fields: [traineeId], references: [id])
+  subscription   Subscription   @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String
+  isPaid         Boolean        @default(false)
+  trainingsLeft  Int?
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id])
 }
 
 model TrainingTemplate {
@@ -377,6 +391,6 @@ model PublicSocialNetwork {
   socialNetworkId String
   url             String
 
-  publicContact PublicInfo @relation(fields: [publicContactId], references: [id])
+  publicContact PublicInfo    @relation(fields: [publicContactId], references: [id])
   socialNetwork SocialNetwork @relation(fields: [socialNetworkId], references: [id])
 }
