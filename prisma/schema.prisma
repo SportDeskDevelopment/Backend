@@ -77,6 +77,7 @@ model User {
   preferredLang    LangCode  @default(EN)
   activeRole       RoleType?
   isEmailConfirmed Boolean   @default(false)
+  age              Int?
   emailConfirmCode String?
   username         String    @unique
   photoUrl         String?
@@ -120,8 +121,9 @@ model TrainerProfile {
 
   limits TrainerLimits?
 
-  trainings           Training[]   @relation("TrainingTrainers")
-  attendancesMarkedBy Attendance[] @relation("MarkedAsPaidByTrainer")
+  trainings            Training[]            @relation("TrainingTrainers")
+  attendancesMarkedBy  Attendance[]          @relation("MarkedAsPaidByTrainer")
+  unregisteredTrainees UnregisteredTrainee[]
 }
 
 model TrainerLimits {
@@ -150,15 +152,17 @@ model ReferralInvite {
 }
 
 model TraineeProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  user                  User    @relation(fields: [userId], references: [id])
+  unregisteredTraineeId String?
 
   groups               Group[]               @relation("TraineeGroups")
   attendances          Attendance[]
   parents              ParentTraineeLink[]
   trainers             TrainerTraineeLink[]
   subscriptionTrainees SubscriptionTrainee[]
+  unregisteredTrainee  UnregisteredTrainee[]
 }
 
 model TrainerTraineeLink {
@@ -262,7 +266,8 @@ model Training {
 
 model Attendance {
   id                      String           @id @default(cuid())
-  traineeId               String
+  traineeId               String?
+  unregisteredTraineeId   String?
   trainingId              String
   status                  AttendanceStatus @default(PRESENT)
   markedAt                DateTime         @default(now())
@@ -271,7 +276,8 @@ model Attendance {
   paymentId               String? // если оплачено напрямую
   markedAsPaidByTrainerId String? // если тренер сам отметил 
 
-  trainee               TraineeProfile       @relation(fields: [traineeId], references: [id])
+  trainee               TraineeProfile?      @relation(fields: [traineeId], references: [id])
+  unregisteredTrainee   UnregisteredTrainee? @relation(fields: [unregisteredTraineeId], references: [id])
   training              Training             @relation(fields: [trainingId], references: [id])
   createdBy             User?                @relation("createdBy", fields: [createdByUserId], references: [id])
   subscriptionTrainee   SubscriptionTrainee? @relation(fields: [subscriptionTraineeId], references: [id])
@@ -400,4 +406,28 @@ model PublicSocialNetwork {
 
   publicContact PublicInfo    @relation(fields: [publicContactId], references: [id])
   socialNetwork SocialNetwork @relation(fields: [socialNetworkId], references: [id])
+}
+
+model UnregisteredTrainee {
+  id          String  @id @default(cuid())
+  email       String?
+  phone       String?
+  age         Int?
+  firstName   String?
+  lastName    String?
+  notes       String?
+  displayName String?
+  isFrozen    Boolean @default(false)
+
+  traineeId String?
+  trainee   TraineeProfile? @relation(fields: [traineeId], references: [id])
+
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  attendances Attendance[]
 }
