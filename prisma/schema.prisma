@@ -62,6 +62,12 @@ enum SubscriptionType {
   PERIOD_AND_DAYS
 }
 
+enum SubscriptionActivationType {
+  WHEN_TRAINING_ATTENDED
+  FROM_PARTICULAR_DATE
+  FROM_ACTIVE_SUBSCRIPTION_ENDS
+}
+
 model User {
   id               String    @id @default(cuid())
   email            String    @unique
@@ -300,14 +306,15 @@ model Subscription {
 }
 
 model SubscriptionTrainee {
-  id             String    @id @default(cuid())
+  id             String                      @id @default(cuid())
   traineeId      String
   subscriptionId String
-  isPaid         Boolean   @default(false)
+  isPaid         Boolean                     @default(false)
   trainingsLeft  Int?
   paymentId      String?
   validUntil     DateTime?
-  activatedAt    DateTime?
+  activeFromDate DateTime?
+  activationType SubscriptionActivationType?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
