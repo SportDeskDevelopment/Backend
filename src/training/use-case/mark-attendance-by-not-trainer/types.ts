@@ -6,4 +6,5 @@ export type MarkAttendanceByNotTrainerCommand = {
   username: string;
   trainingId?: Ids.TrainingId;
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
+  childrenIds?: Ids.ParentTraineeLinkId[];
 };

@@ -3,12 +3,12 @@ import * as DB from "@prisma/client";
 import { Ids } from "../../../kernel/ids";
 import { PrismaService } from "../../../prisma/prisma.service";
 import { ScanTrainerQRCodeStatus } from "./constants";
-import { MarkAttendanceByNotTrainerCommand } from "./types";
 import {
   getActiveTrainings,
+  getTrainingStatus,
   getTrainingAmongActive,
-  trainingToDto,
 } from "./domain";
+import { MarkAttendanceByNotTrainerCommand } from "./types";
 
 export class MarkAttendanceByNotTrainerTrainee {
   constructor(
@@ -22,17 +22,13 @@ export class MarkAttendanceByNotTrainerTrainee {
       db: this.db,
     });
 
-    if (trainings.length === 0) {
-      return {
-        status: ScanTrainerQRCodeStatus.noActiveTrainings,
-      };
-    }
+    const trainingStatusResponse = getTrainingStatus({
+      trainings,
+      trainingId: command.trainingId,
+    });
 
-    if (trainings.length > 1 && !command.trainingId) {
-      return {
-        trainings: trainings.map(trainingToDto),
-        status: ScanTrainerQRCodeStatus.specifyTraining,
-      };
+    if (trainingStatusResponse) {
+      return trainingStatusResponse;
     }
 
     const training = getTrainingAmongActive(trainings, command.trainingId);
