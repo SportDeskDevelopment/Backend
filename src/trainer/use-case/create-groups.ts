@@ -1,7 +1,6 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { TrainerDto } from "../dto";
-
 export type Command = {
   groups: TrainerDto.CreateGroupsDtoGroupsItem[];
   trainerUserId: string;

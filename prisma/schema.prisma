@@ -96,14 +96,15 @@ model User {
 }
 
 model TrainerProfile {
-  id              String      @id @default(cuid())
-  userId          String      @unique
-  user            User        @relation(fields: [userId], references: [id])
-  description     String?
-  trainingSince   Int?
-  sports          Sports[]    @default([])
-  publicContactId String?
-  publicContact   PublicInfo? @relation(fields: [publicContactId], references: [id])
+  id                    String      @id @default(cuid())
+  userId                String      @unique
+  user                  User        @relation(fields: [userId], references: [id])
+  description           String?
+  trainingSince         Int?
+  sports                Sports[]    @default([])
+  publicContactId       String?
+  publicContact         PublicInfo? @relation(fields: [publicContactId], references: [id])
+  isOnboardingCompleted Boolean     @default(false)
 
   groups           Group[]              @relation("GroupTrainers")
   gyms             Gym[]                @relation("TrainerGyms")
