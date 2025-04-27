@@ -27,28 +27,30 @@ export class CreateTrainerProfileUseCase {
       },
     });
 
-    await this.db.user.update({
-      where: { id: userId },
-      data: {
-        roles: newRoles,
-        trainerProfile: {
-          create: {
-            limits: {
-              create: {
-                maxTrainees: limits.maxTrainees,
-                maxGroups: limits.maxGroups,
-                maxGyms: limits.maxGyms,
-                maxTemplates: limits.maxTemplates,
-                maxSubscriptions: limits.maxSubscriptions,
+    await this.db.$transaction(async (prisma) => {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          roles: newRoles,
+          trainerProfile: {
+            create: {
+              limits: {
+                create: {
+                  maxTrainees: limits.maxTrainees,
+                  maxGroups: limits.maxGroups,
+                  maxGyms: limits.maxGyms,
+                  maxTemplates: limits.maxTemplates,
+                  maxSubscriptions: limits.maxSubscriptions,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    await this.db.trainerProfile.create({
-      data: { userId },
+      await prisma.trainerProfile.create({
+        data: { userId },
+      });
     });
   }
 

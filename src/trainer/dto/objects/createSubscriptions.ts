@@ -7,6 +7,6 @@
 import type { CreateSubscriptionsSubscriptionsItem } from "./createSubscriptionsSubscriptionsItem";
 
 export interface CreateSubscriptions {
-  trainerId: string;
+  trainerUserId: string;
   subscriptions: CreateSubscriptionsSubscriptionsItem[];
 }

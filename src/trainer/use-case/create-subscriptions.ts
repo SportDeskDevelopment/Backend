@@ -1,19 +1,20 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { TrainerDto } from "../dto";
 
 type Command = {
-  trainerId: string;
+  trainerUserId: string;
   subscriptions: TrainerDto.CreateSubscriptionsSubscriptionsItem[];
 };
 
 @Injectable()
 export class CreateSubscriptionsUseCase {
   constructor(private readonly db: PrismaService) {}
+  private readonly logger = new Logger(CreateSubscriptionsUseCase.name);
 
   async exec(command: Command) {
     const trainer = await this.db.trainerProfile.findUnique({
-      where: { id: command.trainerId },
+      where: { id: command.trainerUserId },
       include: {
         limits: true,
         subscriptions: { select: { id: true } },
@@ -33,22 +34,29 @@ export class CreateSubscriptionsUseCase {
       };
     }
 
-    await this.db.$transaction(
-      command.subscriptions.map((s) => {
-        const { groupIds, ...restParams } = s;
+    try {
+      await this.db.$transaction(
+        command.subscriptions.map((s) => {
+          const { groupIds, ...restParams } = s;
 
-        return this.db.subscription.create({
-          data: {
-            ...restParams,
-            createdById: trainer.id,
-            groups: groupIds &&
-              groupIds.length > 0 && {
-                connect: groupIds.map((groupId) => ({ id: groupId })),
-              },
-          },
-        });
-      }),
-    );
+          return this.db.subscription.create({
+            data: {
+              ...restParams,
+              createdById: trainer.id,
+              groups: groupIds &&
+                groupIds.length > 0 && {
+                  connect: groupIds.map((groupId) => ({ id: groupId })),
+                },
+            },
+          });
+        }),
+      );
+    } catch (error) {
+      this.logger.error(error);
+      return {
+        message: "Failed to create subscriptions",
+      };
+    }
 
     return {
       message: "Subscriptions created successfully",

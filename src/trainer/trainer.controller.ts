@@ -87,10 +87,14 @@ export class TrainerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-gyms")
   async createGyms(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createGymsBody))
     body: TrainerDto.CreateGymsRequest,
   ) {
-    return this.createGymUseCase.exec(body);
+    return this.createGymUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -103,39 +107,55 @@ export class TrainerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-groups")
   async createGroups(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createGroupsBody))
     body: TrainerDto.CreateGroupsDto,
   ) {
-    return this.createGroupsUseCase.exec(body);
+    return this.createGroupsUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 
   @Roles([DB.RoleType.TRAINER])
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-trainings")
   async createTrainings(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createTrainingsBody))
     body: TrainerDto.CreateTrainingsRequest,
   ) {
-    return this.createTrainingsUseCase.exec(body);
+    return this.createTrainingsUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 
   @Roles([DB.RoleType.TRAINER])
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("persist-contact-information")
   async persistContactInformation(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.persistContactInformationBody))
     body: TrainerDto.PersistContactInformation,
   ) {
-    return this.persistContactInformationUseCase.exec(body);
+    return this.persistContactInformationUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 
   @Roles([DB.RoleType.TRAINER])
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-subscriptions")
   async createSubscriptions(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createSubscriptionsBody))
     body: TrainerDto.CreateSubscriptions,
   ) {
-    return this.createSubscriptionsUseCase.exec(body);
+    return this.createSubscriptionsUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 }

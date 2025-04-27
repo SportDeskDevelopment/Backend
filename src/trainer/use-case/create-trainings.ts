@@ -11,7 +11,7 @@ import * as DB from "@prisma/client";
 
 export type Command = {
   trainings: TrainerDto.TrainingDto[];
-  trainerId: string;
+  trainerUserId: string;
 };
 
 type TrainingWindow = {
@@ -29,7 +29,7 @@ export class CreateTrainingsUseCase {
 
   async exec(command: Command) {
     const trainer = await this.db.trainerProfile.findUnique({
-      where: { id: command.trainerId },
+      where: { id: command.trainerUserId },
     });
 
     if (!trainer) {
@@ -37,40 +37,42 @@ export class CreateTrainingsUseCase {
     }
 
     await this.validateTrainings(command.trainings);
-    await this.validateTrainingTime(command.trainings, command.trainerId);
+    await this.validateTrainingTime(command.trainings, trainer.id);
     await this.validateTrainers(command.trainings);
-    await this.createTrainingTemplates(command);
+    await this.createTrainingTemplates(command, trainer.id);
 
-    const trainings = await this.db.training.createManyAndReturn({
-      data: command.trainings.map((t) => ({
-        name: t.name,
-        type: t.type,
-        startDate: t.startDate,
-        durationMin: t.durationMin,
-        gymId: t.gymId,
-        groupId: t.groupId,
-        templateId: t.templateId,
-        price: t.price,
-      })),
-    });
+    await this.db.$transaction(async (prisma) => {
+      const trainings = await prisma.training.createManyAndReturn({
+        data: command.trainings.map((t) => ({
+          name: t.name,
+          type: t.type,
+          startDate: t.startDate,
+          durationMin: t.durationMin,
+          gymId: t.gymId,
+          groupId: t.groupId,
+          templateId: t.templateId,
+          price: t.price,
+        })),
+      });
 
-    const results = await Promise.allSettled(
-      trainings.map((t) =>
-        this.db.training.update({
-          where: { id: t.id },
-          data: {
-            trainers: {
-              connect: [{ id: command.trainerId }],
+      const results = await Promise.allSettled(
+        trainings.map((t) =>
+          this.db.training.update({
+            where: { id: t.id },
+            data: {
+              trainers: {
+                connect: [{ id: trainer.id }],
+              },
             },
-          },
-        }),
-      ),
-    );
+          }),
+        ),
+      );
 
-    results.forEach((r) => {
-      if (r.status === "rejected") {
-        this.logger.error("🔹 Ошибка при обновлении тренировки:", r.reason);
-      }
+      results.forEach((r) => {
+        if (r.status === "rejected") {
+          this.logger.error("🔹 Ошибка при обновлении тренировки:", r.reason);
+        }
+      });
     });
 
     return {
@@ -325,7 +327,7 @@ export class CreateTrainingsUseCase {
     throw new NotFoundException("Some trainers not found");
   }
 
-  private async createTrainingTemplates(dto: Command) {
+  private async createTrainingTemplates(dto: Command, trainerId: string) {
     const templateTrainings = dto.trainings.filter((t) => t.isSaveAsTemplate);
 
     if (templateTrainings.length > 0) {
@@ -338,7 +340,7 @@ export class CreateTrainingsUseCase {
             durationMin: t.durationMin,
             gymId: t.gymId,
             groupId: t.groupId,
-            trainerId: dto.trainerId,
+            trainerId: trainerId,
           })),
         });
 

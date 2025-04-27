@@ -7,7 +7,7 @@
 import type { PersistContactInformationSocialsItem } from "./persistContactInformationSocialsItem";
 
 export interface PersistContactInformation {
-  trainerId: string;
+  trainerUserId: string;
   emails?: string[];
   phoneNumbers?: string[];
   aboutMe?: string;

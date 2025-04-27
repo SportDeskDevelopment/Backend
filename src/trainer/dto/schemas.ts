@@ -7,7 +7,10 @@
 import { z as zod } from "zod";
 
 export const createTrainingsBody = zod.object({
-  trainerId: zod.string().describe("ID of the trainer creating the trainings"),
+  trainerUserId: zod
+    .string()
+    .optional()
+    .describe("ID of the trainer creating the trainings"),
   trainings: zod
     .array(
       zod.object({
@@ -70,7 +73,7 @@ export const createTrainingsResponse = zod.object({
 });
 
 export const createGymsBody = zod.object({
-  trainerId: zod.string(),
+  trainerUserId: zod.string().optional(),
   gyms: zod.array(
     zod.object({
       name: zod.string(),
@@ -87,7 +90,7 @@ export const createGymsResponse = zod.object({
 });
 
 export const createGroupsBody = zod.object({
-  trainerId: zod.string(),
+  trainerUserId: zod.string().optional(),
   groups: zod.array(
     zod.object({
       name: zod.string(),
@@ -103,7 +106,7 @@ export const createGroupsResponse = zod.object({
 });
 
 export const persistContactInformationBody = zod.object({
-  trainerId: zod.string(),
+  trainerUserId: zod.string(),
   emails: zod.array(zod.string()).optional(),
   phoneNumbers: zod.array(zod.string()).optional(),
   aboutMe: zod.string().optional(),
@@ -122,10 +125,10 @@ export const persistContactInformationResponse = zod.object({
 });
 
 export const createSubscriptionsBody = zod.object({
-  trainerId: zod.string(),
+  trainerUserId: zod.string(),
   subscriptions: zod.array(
     zod.object({
-      createdById: zod.string(),
+      name: zod.string(),
       maxTrainings: zod.number().optional(),
       maxDays: zod.number().optional(),
       price: zod.number().optional(),

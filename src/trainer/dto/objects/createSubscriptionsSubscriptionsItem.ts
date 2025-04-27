@@ -7,7 +7,7 @@
 import type { CreateSubscriptionsSubscriptionsItemType } from "./createSubscriptionsSubscriptionsItemType";
 
 export type CreateSubscriptionsSubscriptionsItem = {
-  createdById: string;
+  name: string;
   maxTrainings?: number;
   maxDays?: number;
   price?: number;
