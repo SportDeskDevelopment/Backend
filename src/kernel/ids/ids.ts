@@ -8,3 +8,4 @@ export type SubscriptionTraineeId = Brand<string, "SubscriptionTraineeId">;
 export type GroupId = Brand<string, "GroupId">;
 export type TraineeId = Brand<string, "TraineeId">;
 export type AttendanceId = Brand<string, "AttendanceId">;
+export type ParentId = Brand<string, "ParentId">;

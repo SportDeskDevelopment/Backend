@@ -4,15 +4,23 @@ import { Ids } from "../../../kernel/ids";
 import { PrismaService } from "../../../prisma/prisma.service";
 import { ScanTrainerQRCodeStatus } from "./constants";
 import { MarkAttendanceByNotTrainerCommand } from "./types";
+import {
+  getActiveTrainings,
+  getTrainingAmongActive,
+  trainingToDto,
+} from "./domain";
 
-export class ScanTrainerQRCodeTrainee {
+export class MarkAttendanceByNotTrainerTrainee {
   constructor(
     private readonly db: PrismaService,
     private readonly user: DB.User & { traineeProfile: DB.TraineeProfile },
   ) {}
 
   async exec(command: MarkAttendanceByNotTrainerCommand) {
-    const trainings = await this.getActiveTrainings(command.trainerId);
+    const trainings = await getActiveTrainings({
+      trainerId: command.trainerId,
+      db: this.db,
+    });
 
     if (trainings.length === 0) {
       return {
@@ -22,12 +30,12 @@ export class ScanTrainerQRCodeTrainee {
 
     if (trainings.length > 1 && !command.trainingId) {
       return {
-        trainings: trainings.map(this.trainingToDto),
+        trainings: trainings.map(trainingToDto),
         status: ScanTrainerQRCodeStatus.specifyTraining,
       };
     }
 
-    const training = this.getTrainingAmongActive(trainings, command.trainingId);
+    const training = getTrainingAmongActive(trainings, command.trainingId);
 
     const hasAlreadyMarked = training.attendances.some(
       (attendance) => attendance.traineeId === this.user.traineeProfile.id,
@@ -49,63 +57,8 @@ export class ScanTrainerQRCodeTrainee {
     });
 
     return {
-      training: this.trainingToDto(training),
+      status: ScanTrainerQRCodeStatus.success,
     };
-  }
-
-  private async getActiveTrainings(trainerId: Ids.TrainerId) {
-    const thirtyMinutes = 1000 * 60 * 30;
-    const now = new Date();
-    const from = new Date(now.getTime() - thirtyMinutes);
-    const to = new Date(now.getTime() + thirtyMinutes);
-
-    const trainings = await this.db.training.findMany({
-      where: {
-        trainers: {
-          some: { id: trainerId },
-        },
-        startDate: {
-          lte: to,
-          gte: from,
-        },
-      },
-      include: {
-        attendances: {
-          select: {
-            traineeId: true,
-          },
-        },
-      },
-    });
-
-    return trainings;
-  }
-
-  private trainingToDto(training: DB.Training) {
-    return {
-      id: training.id,
-      name: training.name,
-      type: training.type,
-      startDate: training.startDate?.toISOString(),
-    };
-  }
-
-  private getTrainingAmongActive(
-    activeTrainings: (DB.Training & { attendances: { traineeId: string }[] })[],
-    trainingId?: Ids.TrainingId,
-  ) {
-    if (activeTrainings.length === 1) return activeTrainings[0];
-    if (!trainingId) throw new NotFoundException("Training Id is not provided");
-
-    const training = activeTrainings.find(
-      (training) => training.id === trainingId,
-    );
-
-    if (!training) {
-      throw new NotFoundException("Training not found among active trainings");
-    }
-
-    return training;
   }
 
   private async getSubscriptionTrainees(

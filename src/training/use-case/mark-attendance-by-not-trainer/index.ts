@@ -3,15 +3,15 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import * as DB from "@prisma/client";
+import { match } from "ts-pattern";
+import { Ids } from "../../../kernel/ids";
 import { PrismaService } from "../../../prisma/prisma.service";
 import { UserService } from "../../../user/user.service";
-import * as DB from "@prisma/client";
+import { MarkAttendanceByNotTrainerParent } from "./parent";
+import { MarkAttendanceByNotTrainerTrainee } from "./trainee";
+import { MarkAttendanceByNotTrainerTraineeParent } from "./trainee-parent";
 import { MarkAttendanceByNotTrainerCommand } from "./types";
-import { match } from "ts-pattern";
-import { ScanTrainerQRCodeTrainee } from "./trainee";
-import { ScanTrainerQRCodeParent } from "./parent";
-import { ScanTrainerQRCodeTraineeParent } from "./trainee-parent";
-import { Ids } from "../../../kernel/ids";
 
 @Injectable()
 export class MarkAttendanceByNotTrainerUseCase {
@@ -47,23 +47,23 @@ export class MarkAttendanceByNotTrainerUseCase {
       }))
       .with(
         [DB.RoleType.TRAINEE],
-        () => new ScanTrainerQRCodeTrainee(this.db, user),
+        () => new MarkAttendanceByNotTrainerTrainee(this.db, user),
       )
       .with(
         [DB.RoleType.PARENT],
-        () => new ScanTrainerQRCodeParent(this.db, this.userService),
+        () => new MarkAttendanceByNotTrainerParent(this.db),
       )
       .with(
         [DB.RoleType.TRAINEE, DB.RoleType.TRAINER],
-        () => new ScanTrainerQRCodeTrainee(this.db, user),
+        () => new MarkAttendanceByNotTrainerTrainee(this.db, user),
       )
       .with(
         [DB.RoleType.PARENT, DB.RoleType.TRAINEE],
-        () => new ScanTrainerQRCodeTraineeParent(this.db, this.userService),
+        () => new MarkAttendanceByNotTrainerTraineeParent(this.db),
       )
       .with(
         [DB.RoleType.PARENT, DB.RoleType.TRAINEE, DB.RoleType.TRAINER],
-        () => new ScanTrainerQRCodeTraineeParent(this.db, this.userService),
+        () => new MarkAttendanceByNotTrainerParent(this.db),
       )
       .run();
 
