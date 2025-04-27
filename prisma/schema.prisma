@@ -310,6 +310,7 @@ model Subscription {
   createdById  String
   maxTrainings Int?
   maxDays      Int?
+  name         String
   price        Float?
   notes        String?
   type         SubscriptionType

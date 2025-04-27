@@ -15,7 +15,7 @@ import { CreateGymsUseCase } from "./use-case/create-gyms";
 import { TrainerDto } from "./dto";
 import * as DB from "@prisma/client";
 import { RolesGuard } from "../common/guards/role.guard";
-import { UserId } from "../kernel/ids";
+import { UserId } from "../kernel/ids/ids";
 import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { CreateTrainingsUseCase } from "./use-case/create-trainings";
 import { PersistContactInformationUseCase } from "./use-case/create-contact-information";

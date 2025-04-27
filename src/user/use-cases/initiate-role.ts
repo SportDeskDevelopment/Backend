@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import * as DB from "@prisma/client";
-import { UserId } from "../../kernel/ids";
+import { UserId } from "../../kernel/ids/ids";
 
 type Command = {
   userId: UserId;
