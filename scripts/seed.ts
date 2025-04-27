@@ -259,6 +259,17 @@ async function main() {
     },
   });
 
+  //Default Trainer Limits
+  await prisma.defaultTrainerLimits.create({
+    data: {
+      maxTrainees: 20,
+      maxGroups: 3,
+      maxGyms: 1,
+      maxSubscriptions: 3,
+      type: PlanType.FREE,
+    },
+  });
+
   // Seed Social Networks
   const socialNetworks = [
     { name: "Instagram", icon: "instagram-icon.svg" },

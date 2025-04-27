@@ -1,3 +1,4 @@
+import { createSubscriptionsBody } from "./dto/schemas";
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { z } from "zod";
 import { LoggedInUser, Roles } from "../common/decorators";
@@ -18,6 +19,7 @@ import { UserId } from "../kernel/ids";
 import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { CreateTrainingsUseCase } from "./use-case/create-trainings";
 import { PersistContactInformationUseCase } from "./use-case/create-contact-information";
+import { CreateSubscriptionsUseCase } from "./use-case/create-subscriptions";
 
 @Controller("trainer")
 export class TrainerController {
@@ -31,6 +33,7 @@ export class TrainerController {
     private readonly createGroupsUseCase: CreateGroupsUseCase,
     private readonly createTrainingsUseCase: CreateTrainingsUseCase,
     private readonly persistContactInformationUseCase: PersistContactInformationUseCase,
+    private readonly createSubscriptionsUseCase: CreateSubscriptionsUseCase,
   ) {}
 
   @Post("scan-qr")
@@ -115,6 +118,7 @@ export class TrainerController {
   ) {
     return this.createTrainingsUseCase.exec(body);
   }
+
   @Roles([DB.RoleType.TRAINER])
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("persist-contact-information")
@@ -123,5 +127,15 @@ export class TrainerController {
     body: TrainerDto.PersistContactInformation,
   ) {
     return this.persistContactInformationUseCase.exec(body);
+  }
+
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post("create-subscriptions")
+  async createSubscriptions(
+    @Body(new ZodPipe(TrainerDtoSchemas.createSubscriptionsBody))
+    body: TrainerDto.CreateSubscriptions,
+  ) {
+    return this.createSubscriptionsUseCase.exec(body);
   }
 }

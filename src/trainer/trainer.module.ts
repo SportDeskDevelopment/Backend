@@ -11,6 +11,7 @@ import { CreateGymsUseCase } from "./use-case/create-gyms";
 import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { CreateTrainingsUseCase } from "./use-case/create-trainings";
 import { PersistContactInformationUseCase } from "./use-case/create-contact-information";
+import { CreateSubscriptionsUseCase } from "./use-case/create-subscriptions";
 @Module({
   imports: [PrismaModule],
   controllers: [TrainerController],
@@ -25,6 +26,7 @@ import { PersistContactInformationUseCase } from "./use-case/create-contact-info
     CreateGroupsUseCase,
     CreateTrainingsUseCase,
     PersistContactInformationUseCase,
+    CreateSubscriptionsUseCase,
   ],
 })
 export class TrainerModule {}

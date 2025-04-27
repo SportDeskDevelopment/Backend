@@ -50,6 +50,7 @@ export class CreateTrainingsUseCase {
         gymId: t.gymId,
         groupId: t.groupId,
         templateId: t.templateId,
+        price: t.price,
       })),
     });
 

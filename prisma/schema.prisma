@@ -127,15 +127,27 @@ model TrainerProfile {
 }
 
 model TrainerLimits {
-  id           String   @id @default(cuid())
-  trainerId    String   @unique
-  maxTrainees  Int?
-  maxGroups    Int?
-  maxGyms      Int?
-  maxTemplates Int?
-  updatedAt    DateTime @updatedAt
+  id               String   @id @default(cuid())
+  trainerId        String   @unique
+  maxTrainees      Int?
+  maxGroups        Int?
+  maxGyms          Int?
+  maxTemplates     Int?
+  maxSubscriptions Int?
+  updatedAt        DateTime @updatedAt
 
   trainer TrainerProfile @relation(fields: [trainerId], references: [id])
+}
+
+model DefaultTrainerLimits {
+  id               String   @id @default(cuid())
+  maxTrainees      Int?
+  maxGroups        Int?
+  maxGyms          Int?
+  maxTemplates     Int?
+  maxSubscriptions Int?
+  updatedAt        DateTime @updatedAt
+  type             PlanType
 }
 
 model ReferralInvite {

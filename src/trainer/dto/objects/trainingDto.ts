@@ -22,6 +22,8 @@ export interface TrainingDto {
   groupId?: string;
   /** ID of the training template */
   templateId?: string;
+  /** Price of the training */
+  price?: number;
   /** Array of trainer IDs for the training */
   trainerIds?: string[];
   /** Flag to indicate if the training should be saved as a template */

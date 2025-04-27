@@ -37,6 +37,7 @@ export const createTrainingsBody = zod.object({
           .string()
           .optional()
           .describe("ID of the training template"),
+        price: zod.number().optional().describe("Price of the training"),
         trainerIds: zod
           .array(zod.string())
           .optional()
@@ -117,6 +118,28 @@ export const persistContactInformationBody = zod.object({
 });
 
 export const persistContactInformationResponse = zod.object({
+  message: zod.string().optional(),
+});
+
+export const createSubscriptionsBody = zod.object({
+  trainerId: zod.string(),
+  subscriptions: zod.array(
+    zod.object({
+      createdById: zod.string(),
+      maxTrainings: zod.number().optional(),
+      maxDays: zod.number().optional(),
+      price: zod.number().optional(),
+      notes: zod.string().optional(),
+      type: zod
+        .enum(["PERIOD", "DAYS", "PERIOD_AND_DAYS"])
+        .describe("Type of the subscription"),
+      isPublic: zod.boolean().optional(),
+      groupIds: zod.array(zod.string()).optional(),
+    }),
+  ),
+});
+
+export const createSubscriptionsResponse = zod.object({
   message: zod.string().optional(),
 });
 
