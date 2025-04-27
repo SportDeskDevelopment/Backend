@@ -1,5 +1,5 @@
 import * as DB from "@prisma/client";
-import { UserId } from "../../kernel/ids";
+import { UserId } from "../../kernel/ids/ids";
 
 export type JwtPayload = {
   id: UserId;

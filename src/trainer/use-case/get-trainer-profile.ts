@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import { UserId } from "../../kernel/ids";
+import { UserId } from "../../kernel/ids/ids";
 
 type Query = {
   userId: UserId;

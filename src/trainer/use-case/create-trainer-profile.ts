@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import { UserId } from "../../kernel/ids";
+import { UserId } from "../../kernel/ids/ids";
 
 import * as DB from "@prisma/client";
 

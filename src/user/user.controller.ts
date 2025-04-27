@@ -14,7 +14,7 @@ import { InferSchema, ZodPipe } from "../shared/lib/zod";
 import { UserDto, UserDtoSchemas } from "./dto";
 import { UserService } from "./user.service";
 import { InitiateRoleUseCase } from "./use-cases/initiate-role";
-import { UserId } from "../kernel/ids";
+import { UserId } from "../kernel/ids/ids";
 
 @Controller("users")
 @UseGuards(JwtAuthGuard)

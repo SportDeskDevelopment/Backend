@@ -43,6 +43,7 @@ async function main() {
           currentPlan: PlanType.PREMIUM,
           planStartedAt: new Date(),
           planUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          qrCodeKey: "123",
           limits: {
             create: {
               maxTrainees: 50,
@@ -182,6 +183,7 @@ async function main() {
   // Create subscription
   await prisma.subscription.create({
     data: {
+      name: "Monthly Subscription",
       createdBy: {
         connect: {
           id: trainerUser.trainerProfile!.id,

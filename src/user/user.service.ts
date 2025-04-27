@@ -6,6 +6,7 @@ import {
 import { LangCode } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDto } from "./dto";
+import { Ids } from "../kernel/ids";
 
 @Injectable()
 export class UserService {
@@ -14,20 +15,22 @@ export class UserService {
   async getCurrentUser(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        roles: true,
+        name: true,
+        preferredLang: true,
+        activeRole: true,
+      },
     });
 
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      preferredLang: user.preferredLang,
-      activeRole: user.activeRole,
-      roles: user.roles,
-    };
+    return user;
   }
 
   async updateLanguage(userId: string, dto: UserDto.UpdateLanguageRequest) {
@@ -54,6 +57,26 @@ export class UserService {
     });
 
     return { message: "Role updated successfully" };
+  }
+
+  async validateUser({
+    username,
+    id,
+    email,
+  }: {
+    username?: string;
+    id?: Ids.UserId;
+    email?: string;
+  }) {
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ username }, { id }, { email }] },
+    });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
   }
 
   private mapLangCode(

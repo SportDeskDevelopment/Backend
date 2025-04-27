@@ -3,6 +3,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { TrainerService } from "../trainer.service";
 import { TrainerDto } from "../dto";
 import * as DB from "@prisma/client";
+import { dateDayToWeekDay } from "../../kernel/mappers";
 
 type Command = {
   trainerUserId: string;
@@ -101,18 +102,6 @@ export class ScanTraineeQRUseCase {
     return [training];
   }
 
-  private dayToWeekDay(day: number): DB.WeekDay {
-    return {
-      0: DB.WeekDay.SUNDAY,
-      1: DB.WeekDay.MONDAY,
-      2: DB.WeekDay.TUESDAY,
-      3: DB.WeekDay.WEDNESDAY,
-      4: DB.WeekDay.THURSDAY,
-      5: DB.WeekDay.FRIDAY,
-      6: DB.WeekDay.SATURDAY,
-    }[day];
-  }
-
   private trainingToDto(
     training: DB.Training,
   ): TrainerDto.ScanTraineeResponseTrainingsItem {
@@ -161,7 +150,7 @@ export class ScanTraineeQRUseCase {
     const from = new Date(now.getTime() - fifteenMinutes);
     const to = new Date(now.getTime() + fifteenMinutes);
 
-    const currentDayOfWeek = this.dayToWeekDay(from.getDay());
+    const currentDayOfWeek = dateDayToWeekDay(from.getDay());
     const fromHours = from.getHours();
     // const fromMinutes = from.getMinutes();
 
