@@ -21,7 +21,6 @@ export class MarkAttendanceByNotTrainerUseCase {
   ) {}
 
   async exec(command: MarkAttendanceByNotTrainerCommand) {
-    // TODO: add validation if have already marked attendance for this training
     const [user] = await Promise.all([
       this.validateUser(command.username),
       this.validateTraining(command.trainingId),

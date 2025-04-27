@@ -29,6 +29,14 @@ export class ScanTrainerQRCodeTrainee {
 
     const training = this.getTrainingAmongActive(trainings, command.trainingId);
 
+    const hasAlreadyMarked = training.attendances.some(
+      (attendance) => attendance.traineeId === this.user.traineeProfile.id,
+    );
+
+    if (hasAlreadyMarked) {
+      return { status: ScanTrainerQRCodeStatus.alreadyMarked };
+    }
+
     const subscriptionTrainees = await this.getSubscriptionTrainees(
       command.subscriptionTraineeId,
       training.groupId as Ids.GroupId,
@@ -83,7 +91,7 @@ export class ScanTrainerQRCodeTrainee {
   }
 
   private getTrainingAmongActive(
-    activeTrainings: DB.Training[],
+    activeTrainings: (DB.Training & { attendances: { traineeId: string }[] })[],
     trainingId?: Ids.TrainingId,
   ) {
     if (activeTrainings.length === 1) return activeTrainings[0];
