@@ -7,6 +7,6 @@
 import type { CreateGymsDtoGymsItem } from "./createGymsDtoGymsItem";
 
 export interface CreateGymsDto {
-  trainerId: string;
+  trainerUserId?: string;
   gyms: CreateGymsDtoGymsItem[];
 }

@@ -96,7 +96,7 @@ describe("CreateTrainingsUseCase", () => {
           trainerIds: ["trainer-1"],
         },
       ],
-      trainerId: "trainer-1",
+      trainerUserId: "trainer-1",
     };
 
     jest
@@ -134,7 +134,7 @@ describe("CreateTrainingsUseCase", () => {
           durationMin: 60,
         },
       ],
-      trainerId: "non-existent-trainer",
+      trainerUserId: "non-existent-trainer",
     };
 
     jest
@@ -153,7 +153,7 @@ describe("CreateTrainingsUseCase", () => {
           durationMin: 60,
         },
       ],
-      trainerId: "trainer-1",
+      trainerUserId: "trainer-1",
     };
 
     const existingTraining = {
@@ -181,7 +181,7 @@ describe("CreateTrainingsUseCase", () => {
           gymId: "non-existent-gym",
         },
       ],
-      trainerId: "trainer-1",
+      trainerUserId: "trainer-1",
     };
 
     jest

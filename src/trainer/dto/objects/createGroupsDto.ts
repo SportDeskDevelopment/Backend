@@ -7,6 +7,6 @@
 import type { CreateGroupsDtoGroupsItem } from "./createGroupsDtoGroupsItem";
 
 export interface CreateGroupsDto {
-  trainerId: string;
+  trainerUserId?: string;
   groups: CreateGroupsDtoGroupsItem[];
 }

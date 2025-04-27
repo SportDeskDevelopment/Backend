@@ -8,7 +8,7 @@ import type { TrainingDto } from "./trainingDto";
 
 export interface CreateTrainingsRequest {
   /** ID of the trainer creating the trainings */
-  trainerId: string;
+  trainerUserId?: string;
   /** Array of trainings to create */
   trainings: TrainingDto[];
 }

@@ -4,7 +4,7 @@ import { TrainerDto } from "../dto";
 
 type Command = {
   gyms: TrainerDto.CreateGymsRequestGymsItem[];
-  trainerId: string;
+  trainerUserId: string;
 };
 
 @Injectable()
@@ -14,38 +14,40 @@ export class CreateGymsUseCase {
 
   async exec(command: Command) {
     const trainer = await this.db.trainerProfile.findUnique({
-      where: { id: command.trainerId },
+      where: { id: command.trainerUserId },
     });
 
     if (!trainer) {
       throw new NotFoundException("Trainer not found");
     }
 
-    const gyms = await this.db.gym.createManyAndReturn({
-      data: command.gyms.map((gym) => ({
-        name: gym.name,
-        address: gym.address,
-        geoLat: gym.geoLat,
-        geoLng: gym.geoLng,
-        workHours: gym.workHours,
-      })),
-    });
+    await this.db.$transaction(async (prisma) => {
+      const gyms = await prisma.gym.createManyAndReturn({
+        data: command.gyms.map((gym) => ({
+          name: gym.name,
+          address: gym.address,
+          geoLat: gym.geoLat,
+          geoLng: gym.geoLng,
+          workHours: gym.workHours,
+        })),
+      });
 
-    const results = await Promise.allSettled(
-      gyms.map((gym) =>
-        this.db.trainerProfile.update({
-          data: {
-            gyms: {
-              connect: { id: gym.id },
+      const results = await Promise.allSettled(
+        gyms.map((gym) =>
+          this.db.trainerProfile.update({
+            data: {
+              gyms: {
+                connect: { id: gym.id },
+              },
             },
-          },
-          where: { id: command.trainerId },
-        }),
-      ),
-    );
+            where: { id: trainer.id },
+          }),
+        ),
+      );
 
-    results.forEach((result) => {
-      if (result.status === "rejected") this.logger.error(result.reason);
+      results.forEach((result) => {
+        if (result.status === "rejected") this.logger.error(result.reason);
+      });
     });
 
     return { message: "Gym(s) created succesfully" };

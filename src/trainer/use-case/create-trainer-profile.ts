@@ -21,13 +21,36 @@ export class CreateTrainerProfileUseCase {
 
     const newRoles = [...user.roles, DB.RoleType.TRAINER];
 
-    await this.db.user.update({
-      where: { id: userId },
-      data: { roles: newRoles },
+    const limits = await this.db.defaultTrainerLimits.findFirst({
+      where: {
+        type: DB.PlanType.FREE,
+      },
     });
 
-    await this.db.trainerProfile.create({
-      data: { userId },
+    await this.db.$transaction(async (prisma) => {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          roles: newRoles,
+          trainerProfile: {
+            create: {
+              limits: {
+                create: {
+                  maxTrainees: limits.maxTrainees,
+                  maxGroups: limits.maxGroups,
+                  maxGyms: limits.maxGyms,
+                  maxTemplates: limits.maxTemplates,
+                  maxSubscriptions: limits.maxSubscriptions,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      await prisma.trainerProfile.create({
+        data: { userId },
+      });
     });
   }
 

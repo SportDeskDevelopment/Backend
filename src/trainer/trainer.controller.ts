@@ -1,3 +1,4 @@
+import { createSubscriptionsBody } from "./dto/schemas";
 import { Body, Controller, Post, UseGuards } from "@nestjs/common";
 import { z } from "zod";
 import { LoggedInUser, Roles } from "../common/decorators";
@@ -18,6 +19,7 @@ import { UserId } from "../kernel/ids/ids";
 import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { CreateTrainingsUseCase } from "./use-case/create-trainings";
 import { PersistContactInformationUseCase } from "./use-case/create-contact-information";
+import { CreateSubscriptionsUseCase } from "./use-case/create-subscriptions";
 
 @Controller("trainer")
 export class TrainerController {
@@ -31,6 +33,7 @@ export class TrainerController {
     private readonly createGroupsUseCase: CreateGroupsUseCase,
     private readonly createTrainingsUseCase: CreateTrainingsUseCase,
     private readonly persistContactInformationUseCase: PersistContactInformationUseCase,
+    private readonly createSubscriptionsUseCase: CreateSubscriptionsUseCase,
   ) {}
 
   @Post("scan-qr")
@@ -84,10 +87,14 @@ export class TrainerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-gyms")
   async createGyms(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createGymsBody))
     body: TrainerDto.CreateGymsRequest,
   ) {
-    return this.createGymUseCase.exec(body);
+    return this.createGymUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -100,28 +107,55 @@ export class TrainerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-groups")
   async createGroups(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createGroupsBody))
     body: TrainerDto.CreateGroupsDto,
   ) {
-    return this.createGroupsUseCase.exec(body);
+    return this.createGroupsUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 
   @Roles([DB.RoleType.TRAINER])
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("create-trainings")
   async createTrainings(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createTrainingsBody))
     body: TrainerDto.CreateTrainingsRequest,
   ) {
-    return this.createTrainingsUseCase.exec(body);
+    return this.createTrainingsUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
+
   @Roles([DB.RoleType.TRAINER])
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post("persist-contact-information")
   async persistContactInformation(
+    @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.persistContactInformationBody))
     body: TrainerDto.PersistContactInformation,
   ) {
-    return this.persistContactInformationUseCase.exec(body);
+    return this.persistContactInformationUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
+  }
+
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post("create-subscriptions")
+  async createSubscriptions(
+    @LoggedInUser() user: JwtPayload,
+    @Body(new ZodPipe(TrainerDtoSchemas.createSubscriptionsBody))
+    body: TrainerDto.CreateSubscriptions,
+  ) {
+    return this.createSubscriptionsUseCase.exec({
+      ...body,
+      trainerUserId: user.id as UserId,
+    });
   }
 }

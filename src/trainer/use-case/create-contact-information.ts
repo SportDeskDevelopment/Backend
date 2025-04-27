@@ -16,7 +16,7 @@ export class PersistContactInformationUseCase {
 
   async exec(command: TrainerDto.PersistContactInformation) {
     const trainer = await this.trainerService.validateTrainer(
-      command.trainerId,
+      command.trainerUserId,
     );
     await this.createPublicContact(trainer, command);
     await this.updatePublicContact(trainer, command);
@@ -34,7 +34,7 @@ export class PersistContactInformationUseCase {
     if (trainer.publicContactId) return;
 
     const { publicContact } = await this.db.trainerProfile.update({
-      where: { id: command.trainerId },
+      where: { id: trainer.id },
       data: {
         publicContact: {
           create: {
