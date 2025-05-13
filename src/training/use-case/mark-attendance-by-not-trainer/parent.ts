@@ -1,14 +1,13 @@
 import { BadRequestException } from "@nestjs/common";
 import { Ids } from "../../../kernel/ids";
 import { PrismaService } from "../../../prisma/prisma.service";
+import { ScanTrainerQRCodeStatus } from "./constants";
 import {
   getActiveTrainings,
   getTrainingAmongActive,
   getTrainingStatus,
 } from "./domain";
 import { MarkAttendanceByNotTrainerCommand } from "./types";
-import * as DB from "@prisma/client";
-import { ScanTrainerQRCodeStatus } from "./constants";
 
 export class MarkAttendanceByNotTrainerParent {
   constructor(private readonly db: PrismaService) {}

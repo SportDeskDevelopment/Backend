@@ -46,6 +46,19 @@ export class MarkAttendanceByNotTrainerTrainee {
       training.groupId as Ids.GroupId,
     );
 
+    await this.db.group.update({
+      where: {
+        id: training.groupId,
+      },
+      data: {
+        trainees: {
+          connect: {
+            id: this.user.traineeProfile.id,
+          },
+        },
+      },
+    });
+
     await this.createAttendance({
       subscriptionTrainees,
       trainingId: training.id as Ids.TrainingId,
@@ -130,10 +143,11 @@ export class MarkAttendanceByNotTrainerTrainee {
           createdByUserId: this.user.id,
         },
       });
+      return;
     }
 
     const finalSubscriptionTraineeId =
-      subscriptionTraineeId ?? subscriptionTrainees[0].id;
+      subscriptionTraineeId ?? subscriptionTrainees[0]?.id;
 
     await this.db.attendance.create({
       data: {
