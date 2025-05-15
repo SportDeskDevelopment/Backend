@@ -4,4 +4,5 @@ export const ScanTrainerQRCodeStatus = {
   specifySubscription: "specifySubscription",
   success: "success",
   alreadyMarked: "alreadyMarked",
+  invalidTrainingsForChildren: "invalidTrainingsForChildren",
 } as const;

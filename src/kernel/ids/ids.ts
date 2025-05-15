@@ -10,3 +10,8 @@ export type TraineeId = Brand<string, "TraineeId">;
 export type AttendanceId = Brand<string, "AttendanceId">;
 export type ParentId = Brand<string, "ParentId">;
 export type ParentTraineeLinkId = Brand<string, "ParentTraineeLinkId">;
+
+// Usernames
+export type TrainerUsername = Brand<string, "TrainerUsername">;
+export type TraineeUsername = Brand<string, "TraineeUsername">;
+export type ParentUsername = Brand<string, "ParentUsername">;

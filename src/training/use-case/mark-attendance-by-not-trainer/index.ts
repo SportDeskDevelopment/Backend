@@ -22,9 +22,9 @@ export class MarkAttendanceByNotTrainerUseCase {
 
   async exec(command: MarkAttendanceByNotTrainerCommand) {
     const [user] = await Promise.all([
-      this.validateUser(command.username),
+      this.validateUser(command.traineeUsername),
       this.validateTraining(command.trainingId),
-      this.validateTrainer(command.trainerId, command.trainerQrCodeKey),
+      this.validateTrainer(command.trainerUsername, command.trainerQrCodeKey),
       this.validateSubscriptionTrainee(command.subscriptionTraineeId),
     ]);
 
@@ -74,10 +74,16 @@ export class MarkAttendanceByNotTrainerUseCase {
     return executor.exec?.(command);
   }
 
-  private async validateUser(username: string) {
+  private async validateUser(traineeUsername: Ids.TraineeUsername) {
     const user = await this.db.user.findUnique({
-      where: { username },
-      include: { traineeProfile: true },
+      where: { username: traineeUsername },
+      include: {
+        traineeProfile: {
+          include: {
+            groups: { select: { id: true } },
+          },
+        },
+      },
     });
 
     if (!user.traineeProfile) {
@@ -87,9 +93,12 @@ export class MarkAttendanceByNotTrainerUseCase {
     return user;
   }
 
-  private async validateTrainer(trainerId: Ids.TrainerId, qrCodeKey: string) {
-    const trainer = await this.db.trainerProfile.findUnique({
-      where: { id: trainerId },
+  private async validateTrainer(
+    trainerUsername: Ids.TrainerUsername,
+    qrCodeKey: string,
+  ) {
+    const trainer = await this.db.trainerProfile.findFirst({
+      where: { user: { username: trainerUsername } },
     });
 
     if (!trainer) {
