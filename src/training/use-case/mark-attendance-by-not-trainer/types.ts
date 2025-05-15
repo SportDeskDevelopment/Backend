@@ -2,9 +2,19 @@ import { Ids } from "../../../kernel/ids";
 
 export type MarkAttendanceByNotTrainerCommand = {
   trainerQrCodeKey: string;
-  trainerId: Ids.TrainerId;
-  username: string;
+  trainerUsername: Ids.TrainerUsername;
+
+  // *** trainee mark attendance for himself
+  traineeUsername?: Ids.TraineeUsername;
   trainingId?: Ids.TrainingId;
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
-  childrenIds?: Ids.ParentTraineeLinkId[];
+  // ***
+
+  // *** parent mark attendance for children
+  childrenTrainings?: {
+    trainingId?: Ids.TrainingId;
+    childId: Ids.ParentTraineeLinkId;
+    subscriptionTraineeId?: Ids.SubscriptionTraineeId;
+  }[];
+  // ***
 };
