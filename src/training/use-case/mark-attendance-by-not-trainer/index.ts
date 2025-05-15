@@ -22,7 +22,7 @@ export class MarkAttendanceByNotTrainerUseCase {
 
   async exec(command: MarkAttendanceByNotTrainerCommand) {
     const [user] = await Promise.all([
-      this.validateUser(command.traineeUsername),
+      this.validateUser(command.username),
       this.validateTraining(command.trainingId),
       this.validateTrainer(command.trainerUsername, command.trainerQrCodeKey),
       this.validateSubscriptionTrainee(command.subscriptionTraineeId),
@@ -74,9 +74,13 @@ export class MarkAttendanceByNotTrainerUseCase {
     return executor.exec?.(command);
   }
 
-  private async validateUser(traineeUsername: Ids.TraineeUsername) {
+  private async validateUser(username: Ids.Username) {
+    if (!username) {
+      throw new BadRequestException("Username is required");
+    }
+
     const user = await this.db.user.findUnique({
-      where: { username: traineeUsername },
+      where: { username },
       include: {
         traineeProfile: {
           include: {

@@ -4,8 +4,10 @@ export type MarkAttendanceByNotTrainerCommand = {
   trainerQrCodeKey: string;
   trainerUsername: Ids.TrainerUsername;
 
+  // username of the user who is marking the attendance (trainee or parent)
+  username: Ids.Username;
+
   // *** trainee mark attendance for himself
-  traineeUsername?: Ids.TraineeUsername;
   trainingId?: Ids.TrainingId;
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
   // ***

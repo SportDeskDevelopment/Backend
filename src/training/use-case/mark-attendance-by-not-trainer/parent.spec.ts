@@ -18,8 +18,15 @@ describe("MarkAttendanceByNotTrainerParent", () => {
     service = new MarkAttendanceByNotTrainerParent(prisma);
   });
 
+  afterEach(async () => {
+    await prisma.attendance.deleteMany();
+    await prisma.subscriptionTrainee.deleteMany();
+    await prisma.training.deleteMany();
+    await prisma.parentTraineeLink.deleteMany();
+  });
+
   describe("exec", () => {
-    it("should throw error when childrenTrainings is not provided", async () => {
+    it("Trainee > ", async () => {
       const command = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
@@ -28,7 +35,7 @@ describe("MarkAttendanceByNotTrainerParent", () => {
       await expect(service.exec(command)).rejects.toThrow(BadRequestException);
     });
 
-    it("should throw error when some children have trainingId and some don't", async () => {
+    it("Parent > should throw error when some children have trainingId and some don't", async () => {
       const command = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
@@ -46,7 +53,7 @@ describe("MarkAttendanceByNotTrainerParent", () => {
       await expect(service.exec(command)).rejects.toThrow(BadRequestException);
     });
 
-    it("should throw error when invalid child id is provided", async () => {
+    it("Parent > should throw error when invalid child id is provided", async () => {
       const command = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
@@ -73,7 +80,7 @@ describe("MarkAttendanceByNotTrainerParent", () => {
       await expect(service.exec(command)).rejects.toThrow(BadRequestException);
     });
 
-    it("should return success status when we pass trainingId and subscriptionTraineeId", async () => {
+    it("Parent > should return success status when we pass trainingId and subscriptionTraineeId", async () => {
       const command = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
@@ -156,7 +163,7 @@ describe("MarkAttendanceByNotTrainerParent", () => {
       });
     }, 10000);
 
-    it("should return already marked status when attendance exists", async () => {
+    it("Parent > should return already marked status when attendance exists", async () => {
       const command = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
