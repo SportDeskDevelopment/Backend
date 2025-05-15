@@ -77,7 +77,11 @@ export class MarkAttendanceByNotTrainerUseCase {
   private async validateUser(username: string) {
     const user = await this.db.user.findUnique({
       where: { username },
-      include: { traineeProfile: true },
+      include: {
+        traineeProfile: {
+          include: { groups: { select: { id: true } } },
+        },
+      },
     });
 
     if (!user?.traineeProfile) {

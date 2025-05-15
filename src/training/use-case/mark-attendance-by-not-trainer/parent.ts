@@ -70,14 +70,14 @@ export class MarkAttendanceByNotTrainerParent {
     childrenIds: Ids.ParentTraineeLinkId[];
     trainingId: Ids.TrainingId;
   }) {
-    const childrenAttendance = await this.db.attendance.findMany({
+    const childrenAttendances = await this.db.attendance.findMany({
       where: {
         traineeId: { in: childrenIds },
         trainingId,
       },
     });
 
-    if (childrenAttendance.length === childrenIds.length) {
+    if (childrenAttendances.length === childrenIds.length) {
       return {
         status: ScanTrainerQRCodeStatus.alreadyMarked,
       };

@@ -13,7 +13,9 @@ import { MarkAttendanceByNotTrainerCommand } from "./types";
 export class MarkAttendanceByNotTrainerTrainee {
   constructor(
     private readonly db: PrismaService,
-    private readonly user: DB.User & { traineeProfile: DB.TraineeProfile },
+    private readonly user: DB.User & {
+      traineeProfile: DB.TraineeProfile & { groups: { id: string }[] };
+    },
   ) {}
 
   async exec(command: MarkAttendanceByNotTrainerCommand) {
@@ -46,24 +48,17 @@ export class MarkAttendanceByNotTrainerTrainee {
       training.groupId as Ids.GroupId,
     );
 
-    await this.db.group.update({
-      where: {
-        id: training.groupId,
-      },
-      data: {
-        trainees: {
-          connect: {
-            id: this.user.traineeProfile.id,
-          },
-        },
-      },
-    });
+    await this.addToGroup(training);
 
-    await this.createAttendance({
+    const createAttendanceResponse = await this.createAttendance({
       subscriptionTrainees,
       trainingId: training.id as Ids.TrainingId,
       subscriptionTraineeId: command.subscriptionTraineeId,
     });
+
+    if (createAttendanceResponse) {
+      return createAttendanceResponse;
+    }
 
     return {
       status: ScanTrainerQRCodeStatus.success,
@@ -176,10 +171,6 @@ export class MarkAttendanceByNotTrainerTrainee {
         },
       });
     }
-
-    return {
-      status: ScanTrainerQRCodeStatus.success,
-    };
   }
 
   private subscriptionToDto(
@@ -191,5 +182,28 @@ export class MarkAttendanceByNotTrainerTrainee {
       id: traineeSubscription.id,
       name: traineeSubscription.subscription.name,
     };
+  }
+
+  private async addToGroup(training: DB.Training) {
+    if (!training.groupId) return;
+
+    const isInThisGroup = this.user?.traineeProfile?.groups?.some(
+      (group) => group.id === training.groupId,
+    );
+
+    if (isInThisGroup) return;
+
+    await this.db.group.update({
+      where: {
+        id: training.groupId,
+      },
+      data: {
+        trainees: {
+          connect: {
+            id: this.user?.traineeProfile?.id,
+          },
+        },
+      },
+    });
   }
 }
