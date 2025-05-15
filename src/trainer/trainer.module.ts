@@ -12,6 +12,8 @@ import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { CreateTrainingsUseCase } from "./use-case/create-trainings";
 import { PersistContactInformationUseCase } from "./use-case/create-contact-information";
 import { CreateSubscriptionsUseCase } from "./use-case/create-subscriptions";
+import { GetTrainingAttendanceUseCase } from "./use-case/training-attendance";
+import { MarkAsPaidUseCase } from "./use-case/mark-as-paid";
 @Module({
   imports: [PrismaModule],
   controllers: [TrainerController],
@@ -27,6 +29,8 @@ import { CreateSubscriptionsUseCase } from "./use-case/create-subscriptions";
     CreateTrainingsUseCase,
     PersistContactInformationUseCase,
     CreateSubscriptionsUseCase,
+    GetTrainingAttendanceUseCase,
+    MarkAsPaidUseCase,
   ],
 })
 export class TrainerModule {}

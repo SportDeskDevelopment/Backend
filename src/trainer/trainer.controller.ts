@@ -1,5 +1,4 @@
-import { createSubscriptionsBody } from "./dto/schemas";
-import { Body, Controller, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import { z } from "zod";
 import { LoggedInUser, Roles } from "../common/decorators";
 import { JwtPayload } from "../common/types/jwt-payload";
@@ -20,6 +19,8 @@ import { CreateGroupsUseCase } from "./use-case/create-groups";
 import { CreateTrainingsUseCase } from "./use-case/create-trainings";
 import { PersistContactInformationUseCase } from "./use-case/create-contact-information";
 import { CreateSubscriptionsUseCase } from "./use-case/create-subscriptions";
+import { GetTrainingAttendanceUseCase } from "./use-case/training-attendance";
+import { MarkAsPaidUseCase } from "./use-case/mark-as-paid";
 
 @Controller("trainer")
 export class TrainerController {
@@ -34,6 +35,8 @@ export class TrainerController {
     private readonly createTrainingsUseCase: CreateTrainingsUseCase,
     private readonly persistContactInformationUseCase: PersistContactInformationUseCase,
     private readonly createSubscriptionsUseCase: CreateSubscriptionsUseCase,
+    private readonly getTrainingAttendanceUseCase: GetTrainingAttendanceUseCase,
+    private readonly markAsPaidUseCase: MarkAsPaidUseCase,
   ) {}
 
   @Post("scan-qr")
@@ -80,6 +83,48 @@ export class TrainerController {
       trainerId: user.id,
       trainingId: body.trainingId,
       traineeUsername: body.traineeUsername,
+    });
+  }
+
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get("training-attendance")
+  async getTrainingAttendance(
+    @LoggedInUser() user: JwtPayload,
+    @Query("page") page = 1,
+    @Query("limit") limit = 10,
+    @Query("order") order: "asc" | "desc" = "desc",
+    @Query("group") groupId: DB.Group["id"],
+    @Query("search") search: string,
+    @Query("trainingType") trainingType: DB.TrainingType,
+    @Query("dateRange") dateRange: [Date, Date],
+    @Query("timeRange") timeRange: [Date, Date],
+    @Query("isPaid") isPaid: boolean,
+  ) {
+    return this.getTrainingAttendanceUseCase.exec({
+      trainerUserId: user.id,
+      page: Number(page),
+      limit: Number(limit),
+      order,
+      groupId,
+      search,
+      trainingType,
+      dateRange,
+      timeRange,
+      isPaid,
+    });
+  }
+
+  @Roles([DB.RoleType.TRAINER])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post("mark-as-paid")
+  async markAsPaid(
+    @LoggedInUser() user: JwtPayload,
+    @Body() body: { attandanceIds: string[] },
+  ) {
+    return this.markAsPaidUseCase.exec({
+      userId: user.id,
+      attandanceIds: body.attandanceIds,
     });
   }
 

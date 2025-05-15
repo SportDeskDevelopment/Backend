@@ -20,6 +20,8 @@ describe("CreateTrainingsUseCase", () => {
     planStartedAt: new Date(),
     planUntil: new Date(),
     trialActivatedAt: new Date(),
+    qrCodeKey: "qr-code-1",
+    isOnboardingCompleted: true,
   };
 
   const mockGym = {
@@ -48,6 +50,7 @@ describe("CreateTrainingsUseCase", () => {
     durationMin: 60,
     startDate: new Date(),
     templateId: "template-1",
+    price: 100,
   };
 
   beforeEach(async () => {
@@ -118,7 +121,10 @@ describe("CreateTrainingsUseCase", () => {
       .spyOn(prismaService.training, "update")
       .mockResolvedValue(mockTraining);
 
-    const result = await useCase.exec(command);
+    const result = await useCase.exec({
+      ...command,
+      trainerUserId: "trainer-1",
+    });
 
     expect(result).toEqual({ message: "Trainings created successfully" });
     expect(prismaService.training.createManyAndReturn).toHaveBeenCalled();
@@ -141,7 +147,12 @@ describe("CreateTrainingsUseCase", () => {
       .spyOn(prismaService.trainerProfile, "findUnique")
       .mockResolvedValue(null);
 
-    await expect(useCase.exec(command)).rejects.toThrow(NotFoundException);
+    await expect(
+      useCase.exec({
+        ...command,
+        trainerUserId: "trainer-1",
+      }),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it("should throw BadRequestException when there are time conflicts", async () => {
@@ -168,7 +179,12 @@ describe("CreateTrainingsUseCase", () => {
       .spyOn(prismaService.training, "findMany")
       .mockResolvedValue([existingTraining]);
 
-    await expect(useCase.exec(command)).rejects.toThrow(BadRequestException);
+    await expect(
+      useCase.exec({
+        ...command,
+        trainerUserId: "trainer-1",
+      }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it("should throw NotFoundException when gym not found", async () => {
@@ -189,6 +205,11 @@ describe("CreateTrainingsUseCase", () => {
       .mockResolvedValue(mockTrainerProfile);
     jest.spyOn(prismaService.gym, "findMany").mockResolvedValue([]);
 
-    await expect(useCase.exec(command)).rejects.toThrow(NotFoundException);
+    await expect(
+      useCase.exec({
+        ...command,
+        trainerUserId: "trainer-1",
+      }),
+    ).rejects.toThrow(NotFoundException);
   });
 });
