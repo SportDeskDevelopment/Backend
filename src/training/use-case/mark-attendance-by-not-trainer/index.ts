@@ -24,7 +24,7 @@ export class MarkAttendanceByNotTrainerUseCase {
     const [user] = await Promise.all([
       this.validateUser(command.username),
       this.validateTraining(command.trainingId),
-      this.validateTrainer(command.trainerId, command.trainerQrCodeKey),
+      this.validateTrainer(command.trainerUsername, command.trainerQrCodeKey),
       this.validateSubscriptionTrainee(command.subscriptionTraineeId),
     ]);
 
@@ -74,22 +74,35 @@ export class MarkAttendanceByNotTrainerUseCase {
     return executor.exec?.(command);
   }
 
-  private async validateUser(username: string) {
+  private async validateUser(username: Ids.Username) {
+    if (!username) {
+      throw new BadRequestException("Username is required");
+    }
+
     const user = await this.db.user.findUnique({
       where: { username },
-      include: { traineeProfile: true },
+      include: {
+        traineeProfile: {
+          include: {
+            groups: { select: { id: true } },
+          },
+        },
+      },
     });
 
-    if (!user.traineeProfile) {
+    if (!user?.traineeProfile) {
       throw new BadRequestException("User is not a trainee");
     }
 
     return user;
   }
 
-  private async validateTrainer(trainerId: Ids.TrainerId, qrCodeKey: string) {
-    const trainer = await this.db.trainerProfile.findUnique({
-      where: { id: trainerId },
+  private async validateTrainer(
+    trainerUsername: Ids.TrainerUsername,
+    qrCodeKey: string,
+  ) {
+    const trainer = await this.db.trainerProfile.findFirst({
+      where: { user: { username: trainerUsername } },
     });
 
     if (!trainer) {
