@@ -86,7 +86,7 @@ export class MarkAttendanceByNotTrainerUseCase {
       },
     });
 
-    if (!user.traineeProfile) {
+    if (!user?.traineeProfile) {
       throw new BadRequestException("User is not a trainee");
     }
 

@@ -32,6 +32,11 @@ export async function getActiveTrainingsFromDB({
           traineeId: true,
         },
       },
+      group: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
 
