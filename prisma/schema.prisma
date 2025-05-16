@@ -169,6 +169,7 @@ model TraineeProfile {
   userId                String  @unique
   user                  User    @relation(fields: [userId], references: [id])
   unregisteredTraineeId String?
+  isOnboardingCompleted Boolean @default(false)
 
   groups               Group[]               @relation("TraineeGroups")
   attendances          Attendance[]
@@ -192,9 +193,10 @@ model TrainerTraineeLink {
 }
 
 model ParentProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  user                  User    @relation(fields: [userId], references: [id])
+  isOnboardingCompleted Boolean @default(false)
 
   trainees ParentTraineeLink[]
 }

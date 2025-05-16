@@ -3,14 +3,57 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { LangCode } from "@prisma/client";
+import { LangCode, RoleType } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { UserDto } from "./dto";
 import { Ids } from "../kernel/ids";
+import { Prisma } from "@prisma/client";
+
+type SelectedUser = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    username: true;
+    email: true;
+    roles: true;
+    name: true;
+    preferredLang: true;
+    activeRole: true;
+    trainerProfile: {
+      select: {
+        gyms: true;
+        groups: true;
+        trainings: true;
+        isOnboardingCompleted: true;
+        subscriptions: true;
+        publicContact: true;
+      };
+    };
+    traineeProfile: {
+      select: {
+        isOnboardingCompleted: true;
+      };
+    };
+    parentProfile: {
+      select: {
+        trainees: true;
+        isOnboardingCompleted: true;
+      };
+    };
+  };
+}>;
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
+
+  private readonly OnboardingStep = {
+    GYM_CREATION: "gym-creation",
+    GROUP_CREATION: "group-creation",
+    SUBSCRIPTION_CREATION: "subscription-creation",
+    TRAINING_CREATION: "training-creation",
+    CONTACT_INFORMATION_CREATION: "contact-information-creation",
+    TRAINEE_CREATION: "trainee-creation",
+  } as const;
 
   async getCurrentUser(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -23,6 +66,27 @@ export class UserService {
         name: true,
         preferredLang: true,
         activeRole: true,
+        trainerProfile: {
+          select: {
+            gyms: true,
+            groups: true,
+            trainings: true,
+            isOnboardingCompleted: true,
+            subscriptions: true,
+            publicContact: true,
+          },
+        },
+        traineeProfile: {
+          select: {
+            isOnboardingCompleted: true,
+          },
+        },
+        parentProfile: {
+          select: {
+            trainees: true,
+            isOnboardingCompleted: true,
+          },
+        },
       },
     });
 
@@ -30,7 +94,10 @@ export class UserService {
       throw new NotFoundException("User not found");
     }
 
-    return user;
+    return {
+      ...user,
+      ...this.checkOnboardingStatus(user),
+    };
   }
 
   async updateLanguage(userId: string, dto: UserDto.UpdateLanguageRequest) {
@@ -87,5 +154,57 @@ export class UserService {
       ua: LangCode.UA,
       pl: LangCode.PL,
     }[lang];
+  }
+
+  private async checkOnboardingStatus(user: SelectedUser) {
+    const trainerStepsLeft: string[] = [];
+    const traineeStepsLeft: string[] = [];
+    const parentStepsLeft: string[] = [];
+
+    const { roles, trainerProfile, traineeProfile, parentProfile } = user;
+
+    if (!trainerProfile && !traineeProfile && !parentProfile) {
+      return;
+    }
+
+    if (
+      roles.includes(RoleType.TRAINER) &&
+      !trainerProfile?.isOnboardingCompleted
+    ) {
+      if (!trainerProfile.gyms?.length) {
+        trainerStepsLeft.push(this.OnboardingStep.GYM_CREATION);
+      }
+
+      if (!trainerProfile.groups?.length) {
+        trainerStepsLeft.push(this.OnboardingStep.GROUP_CREATION);
+      }
+
+      if (!trainerProfile.trainings?.length) {
+        trainerStepsLeft.push(this.OnboardingStep.TRAINING_CREATION);
+      }
+
+      if (!trainerProfile.subscriptions?.length) {
+        trainerStepsLeft.push(this.OnboardingStep.SUBSCRIPTION_CREATION);
+      }
+
+      if (!trainerProfile.publicContact) {
+        trainerStepsLeft.push(this.OnboardingStep.CONTACT_INFORMATION_CREATION);
+      }
+    }
+
+    if (
+      roles.includes(RoleType.PARENT) &&
+      !parentProfile?.isOnboardingCompleted
+    ) {
+      if (!parentProfile.trainees?.length) {
+        parentStepsLeft.push(this.OnboardingStep.TRAINEE_CREATION);
+      }
+    }
+
+    return {
+      trainerOnboardingLeft: trainerStepsLeft,
+      traineeOnboardingLeft: traineeStepsLeft,
+      parentOnboardingLeft: parentStepsLeft,
+    };
   }
 }

@@ -261,6 +261,80 @@ async function main() {
     },
   });
 
+  const traineeSubscription = await prisma.subscription.create({
+    data: {
+      name: "Trainee Monthly Plan",
+      createdById: trainerUser.trainerProfile!.id,
+      type: SubscriptionType.PERIOD,
+      maxTrainings: 8,
+      price: 50,
+      isPublic: true,
+    },
+  });
+
+  // 🔗 Link trainee to subscription
+  const subscriptionTrainee = await prisma.subscriptionTrainee.create({
+    data: {
+      subscriptionId: traineeSubscription.id,
+      traineeId: traineeUser.traineeProfile!.id,
+      activeFromDate: new Date(),
+      isPaid: true,
+    },
+  });
+
+  // Attendance using subscription
+  await prisma.attendance.create({
+    data: {
+      traineeId: traineeUser.traineeProfile!.id,
+      trainingId: training.id,
+      createdByUserId: trainerUser.id,
+      subscriptionTraineeId: subscriptionTrainee.id,
+    },
+  });
+
+  // 👥 Create unregistered trainees
+  const [unreg1, unreg2, unreg3] = await Promise.all([
+    prisma.unregisteredTrainee.create({
+      data: {
+        firstName: "Unregistered One",
+        trainerId: trainerUser.trainerProfile!.id,
+      },
+    }),
+    prisma.unregisteredTrainee.create({
+      data: {
+        firstName: "Unregistered Two",
+        trainerId: trainerUser.trainerProfile!.id,
+      },
+    }),
+    prisma.unregisteredTrainee.create({
+      data: {
+        firstName: "Unregistered Three",
+        trainerId: trainerUser.trainerProfile!.id,
+      },
+    }),
+  ]);
+
+  // 📋 Отметить их на тренировке
+  await prisma.attendance.createMany({
+    data: [
+      {
+        unregisteredTraineeId: unreg1.id,
+        trainingId: training.id,
+        createdByUserId: trainerUser.id,
+      },
+      {
+        unregisteredTraineeId: unreg2.id,
+        trainingId: training.id,
+        createdByUserId: trainerUser.id,
+      },
+      {
+        unregisteredTraineeId: unreg3.id,
+        trainingId: training.id,
+        createdByUserId: trainerUser.id,
+      },
+    ],
+  });
+
   //Default Trainer Limits
   await prisma.defaultTrainerLimits.create({
     data: {

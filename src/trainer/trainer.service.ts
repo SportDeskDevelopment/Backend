@@ -31,13 +31,13 @@ export class TrainerService {
     return trainer;
   }
 
-  async validateTrainer(id: string) {
+  async validateTrainer(userId: string) {
     const trainer = await this.db.trainerProfile.findUnique({
-      where: { id },
+      where: { userId },
     });
 
     if (!trainer) {
-      throw new NotFoundException(`Trainer with id: ${id} not found`);
+      throw new NotFoundException(`Trainer with id: ${userId} not found`);
     }
 
     return trainer;

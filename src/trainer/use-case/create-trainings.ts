@@ -29,7 +29,7 @@ export class CreateTrainingsUseCase {
 
   async exec(command: Command) {
     const trainer = await this.db.trainerProfile.findUnique({
-      where: { id: command.trainerUserId },
+      where: { userId: command.trainerUserId },
     });
 
     if (!trainer) {
