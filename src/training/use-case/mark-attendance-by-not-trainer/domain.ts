@@ -161,7 +161,16 @@ export async function getSubscriptionTrainees({
       {
         OR: [
           { activeFromDate: { lte: new Date() } },
-          { activeFromDate: { equals: null } },
+          {
+            AND: [
+              { activeFromDate: { equals: null } },
+              {
+                activationType: {
+                  equals: DB.SubscriptionActivationType.WHEN_TRAINING_ATTENDED,
+                },
+              },
+            ],
+          },
         ],
       },
     ],
