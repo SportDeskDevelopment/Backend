@@ -51,7 +51,7 @@ describe("MarkAttendanceByNotTrainerTrainee", () => {
   // });
 
   describe("exec", () => {
-    it("should return success when marking attendance only with username and trainerId", async () => {
+    it("should return success when marking unpaid attendance only with username and trainerId for group where trainee is a member", async () => {
       const command: MarkAttendanceByNotTrainerCommand = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,

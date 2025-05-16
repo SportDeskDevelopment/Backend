@@ -203,10 +203,33 @@ export async function getSubscriptionTrainees({
       subscription: {
         OR: [
           {
-            groups: { some: { id: trainingGroupId } },
+            AND: [
+              {
+                groups: { some: { id: trainingGroupId } },
+                OR: [
+                  {
+                    trainingType: {
+                      equals: DB.SubscriptionTrainingType.GROUP,
+                    },
+                  },
+                  {
+                    trainingType: {
+                      equals: DB.SubscriptionTrainingType.GROUP_AND_INDIVIDUAL,
+                    },
+                  },
+                ],
+              },
+            ],
           },
           {
-            groups: { none: {} },
+            AND: [
+              {
+                groups: { none: {} },
+                trainingType: {
+                  equals: DB.SubscriptionTrainingType.INDIVIDUAL,
+                },
+              },
+            ],
           },
         ],
       },

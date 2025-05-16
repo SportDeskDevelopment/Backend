@@ -5,6 +5,7 @@ import {
   TrainingType,
   WeekDay,
   SubscriptionType,
+  SubscriptionTrainingType,
 } from "@prisma/client";
 import bcrypt from "bcrypt";
 
@@ -191,6 +192,7 @@ async function main() {
       },
       maxTrainings: 12,
       type: SubscriptionType.PERIOD,
+      trainingType: SubscriptionTrainingType.GROUP_AND_INDIVIDUAL,
     },
   });
 
