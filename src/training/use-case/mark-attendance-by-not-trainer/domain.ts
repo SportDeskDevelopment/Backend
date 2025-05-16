@@ -62,31 +62,34 @@ export function getTrainingAmongActive<TTraining extends DB.Training>({
   traineeGroupIds?: Ids.GroupId[];
 }) {
   if (activeTrainings.length === 1) return activeTrainings[0];
+
   if (!trainingId && !traineeGroupIds) {
     throw new NotFoundException(
-      "Training Id or Trainee Group Id is not provided",
+      "Training Id and Trainee Group Id are not provided",
     );
   }
 
   // look for training by trainee groups
   if (!trainingId) {
-    const trainings = activeTrainings.filter((training) =>
-      traineeGroupIds.includes(training.groupId as Ids.GroupId),
+    const trainingsByGroupsOrNotBelongingToGroup = activeTrainings.filter(
+      (training) =>
+        traineeGroupIds.includes(training.groupId as Ids.GroupId) ||
+        !training.groupId,
     );
 
-    if (trainings.length === 0) {
+    if (trainingsByGroupsOrNotBelongingToGroup.length === 0) {
       throw new NotFoundException(
         "No training found among active trainings by trainee group id",
       );
     }
 
-    if (trainings.length > 1) {
+    if (trainingsByGroupsOrNotBelongingToGroup.length > 1) {
       throw new BadRequestException(
         "More than one training found among active trainings by trainee group id",
       );
     }
 
-    return trainings[0];
+    return trainingsByGroupsOrNotBelongingToGroup[0];
   }
 
   const training = activeTrainings.find(
@@ -242,7 +245,7 @@ export async function createAttendance({
     },
   });
 
-  if (subscriptionTrainee.subscription.type === DB.SubscriptionType.PERIOD) {
+  if (subscriptionTrainee.subscription?.type === DB.SubscriptionType.PERIOD) {
     await db.subscriptionTrainee.update({
       where: { id: finalSubscriptionTraineeId },
       data: {

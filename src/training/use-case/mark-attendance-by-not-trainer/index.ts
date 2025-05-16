@@ -7,18 +7,14 @@ import * as DB from "@prisma/client";
 import { match } from "ts-pattern";
 import { Ids } from "../../../kernel/ids";
 import { PrismaService } from "../../../prisma/prisma.service";
-import { UserService } from "../../../user/user.service";
 import { MarkAttendanceByNotTrainerParent } from "./parent";
 import { MarkAttendanceByNotTrainerTrainee } from "./trainee";
 import { MarkAttendanceByNotTrainerTraineeParent } from "./trainee-parent";
-import { MarkAttendanceByNotTrainerCommand } from "./types";
+import { MarkAttendanceByNotTrainerCommand, UserInCommand } from "./types";
 
 @Injectable()
 export class MarkAttendanceByNotTrainerUseCase {
-  constructor(
-    private readonly db: PrismaService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly db: PrismaService) {}
 
   async exec(command: MarkAttendanceByNotTrainerCommand) {
     const [user] = await Promise.all([
@@ -74,7 +70,7 @@ export class MarkAttendanceByNotTrainerUseCase {
     return executor.exec?.(command);
   }
 
-  private async validateUser(username: Ids.Username) {
+  private async validateUser(username: Ids.Username): Promise<UserInCommand> {
     if (!username) {
       throw new BadRequestException("Username is required");
     }

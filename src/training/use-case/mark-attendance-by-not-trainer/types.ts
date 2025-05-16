@@ -1,4 +1,5 @@
 import { Ids } from "../../../kernel/ids";
+import * as DB from "@prisma/client";
 
 export type MarkAttendanceByNotTrainerCommand = {
   trainerQrCodeKey: string;
@@ -20,3 +21,13 @@ export type MarkAttendanceByNotTrainerCommand = {
   }[];
   // ***
 };
+
+export type UserInCommand = DB.Prisma.UserGetPayload<{
+  include: {
+    traineeProfile: {
+      include: {
+        groups: { select: { id: true } };
+      };
+    };
+  };
+}>;

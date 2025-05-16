@@ -8,6 +8,7 @@ import {
   TrainingType,
   SubscriptionActivationType,
 } from "@prisma/client";
+import { MarkAttendanceByNotTrainerCommand } from "./types";
 
 describe("MarkAttendanceByNotTrainerParent", () => {
   let service: MarkAttendanceByNotTrainerParent;
@@ -27,18 +28,20 @@ describe("MarkAttendanceByNotTrainerParent", () => {
 
   describe("exec", () => {
     it("Trainee > ", async () => {
-      const command = {
+      const command: MarkAttendanceByNotTrainerCommand = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
+        username: "parent" as Ids.Username,
       };
 
       await expect(service.exec(command)).rejects.toThrow(BadRequestException);
     });
 
     it("Parent > should throw error when some children have trainingId and some don't", async () => {
-      const command = {
+      const command: MarkAttendanceByNotTrainerCommand = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
+        username: "parent" as Ids.Username,
         childrenTrainings: [
           {
             childId: "child-1" as Ids.ParentTraineeLinkId,
@@ -54,9 +57,10 @@ describe("MarkAttendanceByNotTrainerParent", () => {
     });
 
     it("Parent > should throw error when invalid child id is provided", async () => {
-      const command = {
+      const command: MarkAttendanceByNotTrainerCommand = {
         trainerQrCodeKey: "key",
         trainerUsername: "trainer" as Ids.TrainerUsername,
+        username: "parent" as Ids.Username,
         childrenTrainings: [
           {
             childId: "child-1" as Ids.ParentTraineeLinkId,
