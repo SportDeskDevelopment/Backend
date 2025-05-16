@@ -51,6 +51,54 @@ describe("MarkAttendanceByNotTrainerTrainee", () => {
   // });
 
   describe("exec", () => {
+    it("should return success when marking attendance only with username and trainerId", async () => {
+      const command: MarkAttendanceByNotTrainerCommand = {
+        trainerQrCodeKey: "key",
+        trainerUsername: "trainer" as Ids.TrainerUsername,
+        username: mockUser.username as Ids.Username,
+      };
+
+      const mockTraining: Prisma.TrainingGetPayload<{
+        include: { attendances: true };
+      }> = {
+        id: "training-1",
+        name: "Test Training",
+        type: TrainingType.GROUP,
+        startDate: new Date(),
+        durationMin: 60,
+        gymId: "gym-1",
+        groupId: mockUser.traineeProfile.groups[0]?.id,
+        templateId: "template-1",
+        price: 100,
+        attendances: [],
+      };
+
+      jest.spyOn(prisma.training, "findMany").mockResolvedValue([mockTraining]);
+      jest.spyOn(prisma.subscriptionTrainee, "findMany").mockResolvedValue([]);
+
+      jest.spyOn(prisma.attendance, "create").mockResolvedValue({
+        id: "attendance-1",
+        trainingId: mockTraining.id,
+        traineeId: mockUser.traineeProfile.id,
+        status: AttendanceStatus.PRESENT,
+        markedAt: new Date(),
+        createdByUserId: mockUser.id,
+        subscriptionTraineeId: null,
+        unregisteredTraineeId: null,
+        paymentId: null,
+        markedAsPaidByTrainerId: null,
+      });
+
+      const result = await service.exec(command);
+
+      expect(result).toEqual({
+        status: ScanTrainerQRCodeStatus.success,
+      });
+
+      expect(prisma.training.findMany).toHaveBeenCalled();
+      expect(prisma.attendance.create).toHaveBeenCalled();
+    });
+
     it("should return success when marking attendance with subscriptionTraineeId", async () => {
       const command: MarkAttendanceByNotTrainerCommand = {
         trainerQrCodeKey: "key",
