@@ -33,6 +33,10 @@ export class MarkAttendanceByNotTrainerUseCase {
       .filter((role) => interestedRoles.includes(role))
       .toSorted();
 
+    if (roles.length === 0) {
+      throw new BadRequestException("Unexpected roles of the user");
+    }
+
     const executor = match(roles)
       .returnType<{
         exec: (command: MarkAttendanceByNotTrainerCommand) => Promise<unknown>;
@@ -83,11 +87,12 @@ export class MarkAttendanceByNotTrainerUseCase {
             groups: { select: { id: true } },
           },
         },
+        parentProfile: { select: { id: true } },
       },
     });
 
-    if (!user?.traineeProfile) {
-      throw new BadRequestException("User is not a trainee");
+    if (!user?.traineeProfile && !user?.parentProfile) {
+      throw new BadRequestException("User is not a trainee or parent");
     }
 
     return user;

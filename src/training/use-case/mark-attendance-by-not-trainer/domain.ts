@@ -124,11 +124,13 @@ export function getTrainingStatus({
     };
   }
 
-  const isAllTrainingsActive = trainingIds?.every((trainingId) =>
+  if (!trainingIds) return;
+
+  const areAllTrainingsActive = trainingIds?.every((trainingId) =>
     trainings.some((training) => training.id === trainingId),
   );
 
-  if (!isAllTrainingsActive) {
+  if (!areAllTrainingsActive) {
     throw new BadRequestException("Invalid trainings in getTrainingStatus");
   }
 }
@@ -144,9 +146,33 @@ export async function getSubscriptionTrainees({
   db: PrismaService;
   userId: Ids.UserId;
 }) {
+  const commonWhere: DB.Prisma.SubscriptionTraineeWhereInput = {
+    isPaid: true,
+    AND: [
+      {
+        OR: [{ trainingsLeft: { gt: 0 } }, { trainingsLeft: { equals: null } }],
+      },
+      {
+        OR: [
+          { validUntil: { gte: new Date() } },
+          { validUntil: { equals: null } },
+        ],
+      },
+      {
+        OR: [
+          { activeFromDate: { lte: new Date() } },
+          { activeFromDate: { equals: null } },
+        ],
+      },
+    ],
+  };
+
   if (subscriptionTraineeId) {
     const subscriptionTrainee = await db.subscriptionTrainee.findUnique({
-      where: { id: subscriptionTraineeId },
+      where: {
+        ...commonWhere,
+        id: subscriptionTraineeId,
+      },
       include: {
         subscription: {
           select: { name: true, type: true },
@@ -163,15 +189,12 @@ export async function getSubscriptionTrainees({
 
   return db.subscriptionTrainee.findMany({
     where: {
-      trainee: {
-        userId,
-      },
+      ...commonWhere,
+      trainee: { userId },
       subscription: {
         OR: [
           {
-            groups: {
-              some: { id: trainingGroupId },
-            },
+            groups: { some: { id: trainingGroupId } },
           },
           {
             groups: { none: {} },

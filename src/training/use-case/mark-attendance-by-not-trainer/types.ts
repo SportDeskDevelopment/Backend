@@ -29,5 +29,10 @@ export type UserInCommand = DB.Prisma.UserGetPayload<{
         groups: { select: { id: true } };
       };
     };
+    parentProfile: {
+      select: {
+        id: true;
+      };
+    };
   };
 }>;

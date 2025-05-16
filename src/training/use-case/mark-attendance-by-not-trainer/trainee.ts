@@ -35,7 +35,7 @@ export class MarkAttendanceByNotTrainerTrainee {
     const training = getTrainingAmongActive({
       activeTrainings,
       trainingId: command.trainingId,
-      traineeGroupIds: this.user.traineeProfile.groups.map(
+      traineeGroupIds: this.user.traineeProfile?.groups?.map(
         (group) => group.id as Ids.GroupId,
       ),
     });
