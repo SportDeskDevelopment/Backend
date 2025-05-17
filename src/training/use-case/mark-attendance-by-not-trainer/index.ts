@@ -51,7 +51,7 @@ export class MarkAttendanceByNotTrainerUseCase {
       )
       .with(
         [DB.RoleType.PARENT],
-        () => new MarkAttendanceByNotTrainerParent(this.db),
+        () => new MarkAttendanceByNotTrainerParent(this.db, user),
       )
       .with(
         [DB.RoleType.TRAINEE, DB.RoleType.TRAINER],
@@ -63,7 +63,7 @@ export class MarkAttendanceByNotTrainerUseCase {
       )
       .with(
         [DB.RoleType.PARENT, DB.RoleType.TRAINEE, DB.RoleType.TRAINER],
-        () => new MarkAttendanceByNotTrainerParent(this.db),
+        () => new MarkAttendanceByNotTrainerParent(this.db, user),
       )
       .run();
 

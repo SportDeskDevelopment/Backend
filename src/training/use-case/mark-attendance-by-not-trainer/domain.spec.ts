@@ -10,6 +10,7 @@ import {
   getTrainingStatus,
   getSubscriptionTrainees,
   createAttendance,
+  addTraineeToTrainingGroupIfNotIn,
 } from "./domain";
 
 describe("Domain Functions", () => {
@@ -332,7 +333,8 @@ describe("Domain Functions", () => {
         ],
         trainingId: "training-1" as Ids.TrainingId,
         db: prisma,
-        user: mockUser,
+        traineeId: mockUser.traineeProfile.id as Ids.TraineeId,
+        createdByUserId: mockUser.id as Ids.UserId,
       });
 
       expect(result).toEqual({
@@ -362,7 +364,8 @@ describe("Domain Functions", () => {
         subscriptionTrainees: [],
         trainingId: "training-1" as Ids.TrainingId,
         db: prisma,
-        user: mockUser,
+        traineeId: mockUser.traineeProfile.id as Ids.TraineeId,
+        createdByUserId: mockUser.id as Ids.UserId,
       });
 
       expect(result).toEqual({
@@ -397,7 +400,8 @@ describe("Domain Functions", () => {
         subscriptionTrainees: [mockSubscriptionTrainee],
         trainingId: "training-1" as Ids.TrainingId,
         db: prisma,
-        user: mockUser,
+        traineeId: mockUser.traineeProfile.id as Ids.TraineeId,
+        createdByUserId: mockUser.id as Ids.UserId,
       });
 
       expect(result).toEqual({
@@ -408,6 +412,108 @@ describe("Domain Functions", () => {
         where: { id: "sub-1" },
         data: { trainingsLeft: 9 },
       });
+    });
+  });
+
+  describe("addTraineeToTrainingGroupIfNotIn", () => {
+    const mockTraining: DB.Prisma.TrainingGetPayload<{
+      include: { group: { select: { id: true } } };
+    }> = {
+      id: "training-1",
+      groupId: "group-1",
+      name: "Test Training",
+      type: DB.TrainingType.GROUP,
+      startDate: new Date(),
+      durationMin: 60,
+      gymId: "gym-1",
+      templateId: "template-1",
+      price: 100,
+      group: { id: "group-1" },
+    };
+
+    const mockTrainee: DB.Prisma.TraineeProfileGetPayload<{
+      include: { groups: { select: { id: true } } };
+    }> = {
+      id: "trainee-1",
+      userId: "user-1",
+      isOnboardingCompleted: true,
+      unregisteredTraineeId: null,
+      groups: [{ id: mockTraining.group.id }],
+    };
+
+    const mockTrainingWithoutGroup: DB.Prisma.TrainingGetPayload<{
+      include: { group: { select: { id: true } } };
+    }> = {
+      id: "training-2",
+      groupId: null,
+      name: "Test Training",
+      type: DB.TrainingType.GROUP,
+      startDate: new Date(),
+      durationMin: 60,
+      gymId: "gym-1",
+      templateId: "template-1",
+      price: 100,
+      group: null,
+    };
+
+    it("should not update group when training has no group", async () => {
+      jest.spyOn(prisma.group, "update");
+
+      await addTraineeToTrainingGroupIfNotIn({
+        training: mockTrainingWithoutGroup,
+        db: prisma,
+        traineeId: "trainee-1" as Ids.TraineeId,
+      });
+
+      expect(prisma.group.update).not.toHaveBeenCalled();
+    });
+
+    it("should not update group when trainee is already in the group", async () => {
+      jest.spyOn(prisma.group, "update");
+
+      await addTraineeToTrainingGroupIfNotIn({
+        training: mockTraining,
+        db: prisma,
+        traineeId: mockTrainee.id as Ids.TraineeId,
+        traineeGroupIds: mockTrainee.groups.map(
+          (group) => group.id,
+        ) as Ids.GroupId[],
+      });
+
+      expect(prisma.group.update).not.toHaveBeenCalled();
+    });
+
+    it("should add trainee to group when not in the group", async () => {
+      jest.spyOn(prisma.group, "update").mockResolvedValue({
+        id: "group-1",
+        name: "Test Group",
+        gymId: "gym-1",
+      });
+
+      await addTraineeToTrainingGroupIfNotIn({
+        training: mockTraining,
+        db: prisma,
+        traineeId: mockTrainee.id as Ids.TraineeId,
+        traineeGroupIds: ["group-2"] as Ids.GroupId[],
+      });
+
+      expect(prisma.group.update).toHaveBeenCalled();
+    });
+
+    it("should add trainee to group when no traineeGroupIds provided", async () => {
+      jest.spyOn(prisma.group, "update").mockResolvedValue({
+        id: "group-1",
+        name: "Test Group",
+        gymId: "gym-1",
+      });
+
+      await addTraineeToTrainingGroupIfNotIn({
+        training: mockTraining,
+        db: prisma,
+        traineeId: mockTrainee.id as Ids.TraineeId,
+      });
+
+      expect(prisma.group.update).toHaveBeenCalled();
     });
   });
 });

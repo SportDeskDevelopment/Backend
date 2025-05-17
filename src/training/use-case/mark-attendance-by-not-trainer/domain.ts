@@ -140,11 +140,13 @@ export async function getSubscriptionTrainees({
   trainingGroupId,
   db,
   userId,
+  traineeId,
 }: {
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
   trainingGroupId?: Ids.GroupId;
   db: PrismaService;
-  userId: Ids.UserId;
+  userId?: Ids.UserId;
+  traineeId?: Ids.TraineeId;
 }) {
   const commonWhere: DB.Prisma.SubscriptionTraineeWhereInput = {
     isPaid: true,
@@ -190,7 +192,9 @@ export async function getSubscriptionTrainees({
     });
 
     if (!subscriptionTrainee) {
-      throw new NotFoundException("Subscription trainee not found");
+      throw new NotFoundException(
+        `Subscription trainee not found [subscriptionTraineeId]: ${subscriptionTraineeId}, [traineeId]: ${traineeId}`,
+      );
     }
 
     return [subscriptionTrainee];
@@ -199,7 +203,7 @@ export async function getSubscriptionTrainees({
   return db.subscriptionTrainee.findMany({
     where: {
       ...commonWhere,
-      trainee: { userId },
+      trainee: { OR: [{ userId }, { id: traineeId }] },
       subscription: {
         OR: [
           {
@@ -247,7 +251,8 @@ export async function createAttendance({
   trainingId,
   subscriptionTraineeId,
   db,
-  user,
+  traineeId,
+  createdByUserId,
 }: {
   subscriptionTrainees: (DB.SubscriptionTrainee & {
     subscription: { name: string; type: DB.SubscriptionType };
@@ -255,7 +260,8 @@ export async function createAttendance({
   trainingId: Ids.TrainingId;
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
   db: PrismaService;
-  user: DB.User & { traineeProfile: DB.TraineeProfile };
+  traineeId: Ids.TraineeId;
+  createdByUserId: Ids.UserId;
 }) {
   if (subscriptionTrainees.length > 1 && !subscriptionTraineeId) {
     return {
@@ -267,9 +273,9 @@ export async function createAttendance({
   if (subscriptionTrainees.length === 0) {
     await db.attendance.create({
       data: {
-        traineeId: user.traineeProfile.id,
+        traineeId,
         trainingId,
-        createdByUserId: user.id,
+        createdByUserId,
       },
     });
 
@@ -283,9 +289,9 @@ export async function createAttendance({
 
   await db.attendance.create({
     data: {
-      traineeId: user.traineeProfile.id,
+      traineeId,
       trainingId,
-      createdByUserId: user.id,
+      createdByUserId,
       subscriptionTraineeId: finalSubscriptionTraineeId,
       //TODO:do we need this?
       status: DB.AttendanceStatus.PRESENT,
@@ -323,4 +329,29 @@ export function subscriptionToDto(
     id: traineeSubscription.id,
     name: traineeSubscription.subscription.name,
   };
+}
+
+export async function addTraineeToTrainingGroupIfNotIn({
+  training,
+  db,
+  traineeId,
+  traineeGroupIds,
+}: {
+  training: DB.Training;
+  db: PrismaService;
+  traineeId: Ids.TraineeId;
+  traineeGroupIds?: Ids.GroupId[];
+}) {
+  if (!training.groupId) return;
+
+  const isInThisGroup = traineeGroupIds?.some(
+    (groupId) => groupId === training.groupId,
+  );
+
+  if (isInThisGroup) return;
+
+  await db.group.update({
+    where: { id: training.groupId },
+    data: { trainees: { connect: { id: traineeId } } },
+  });
 }

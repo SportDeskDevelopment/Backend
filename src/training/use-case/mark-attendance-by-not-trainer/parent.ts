@@ -3,34 +3,30 @@ import { Ids } from "../../../kernel/ids";
 import { PrismaService } from "../../../prisma/prisma.service";
 import { ScanTrainerQRCodeStatus } from "./constants";
 import {
+  addTraineeToTrainingGroupIfNotIn,
   createAttendance,
   getActiveTrainingsFromDB,
   getSubscriptionTrainees,
   getTrainingAmongActive,
   getTrainingStatus,
 } from "./domain";
-import { MarkAttendanceByNotTrainerCommand } from "./types";
+import { MarkAttendanceByNotTrainerCommand, UserInCommand } from "./types";
 
 export class MarkAttendanceByNotTrainerParent {
-  constructor(private readonly db: PrismaService) {}
+  constructor(
+    private readonly db: PrismaService,
+    private readonly user: UserInCommand,
+  ) {}
 
   async exec(command: MarkAttendanceByNotTrainerCommand) {
-    if (!command.childrenTrainings) {
+    if (!command.childrenAndTrainings) {
       throw new BadRequestException("Info about children is required");
     }
 
-    const childrenAttendanceStatus = await this.checkChildrenAttendance({
-      childrenIds: command.childrenTrainings.map((item) => item.childId),
-      trainingId: command.trainingId,
-    });
-
-    if (childrenAttendanceStatus) {
-      return childrenAttendanceStatus;
-    }
-
-    const childrenTrainings = await this.validateChildren(
-      command.childrenTrainings,
-    );
+    const childrenTraineeWithCommandInfo =
+      await this.validateAndAppendChildrenWithAdditionalInfo(
+        command.childrenAndTrainings,
+      );
 
     const activeTrainings = await getActiveTrainingsFromDB({
       trainerUsername: command.trainerUsername,
@@ -39,18 +35,20 @@ export class MarkAttendanceByNotTrainerParent {
 
     const trainingStatus = getTrainingStatus({
       trainings: activeTrainings,
-      trainingIds: childrenTrainings.map((child) => child.trainingId),
+      trainingIds: childrenTraineeWithCommandInfo
+        .map((child) => child.commandTrainingId)
+        .filter(Boolean),
     });
 
     if (trainingStatus) {
       return trainingStatus;
     }
 
-    for (const childTraining of childrenTrainings) {
+    for (const childTraineeWithCommand of childrenTraineeWithCommandInfo) {
       const training = getTrainingAmongActive({
         activeTrainings,
-        trainingId: childTraining.trainingId,
-        traineeGroupIds: childTraining.traineeGroupIds,
+        trainingId: childTraineeWithCommand.commandTrainingId,
+        traineeGroupIds: childTraineeWithCommand.traineeGroupIds,
       });
 
       // get training from db to avoid concurrency issues
@@ -63,25 +61,35 @@ export class MarkAttendanceByNotTrainerParent {
         },
       });
 
-      const isAlreadyMarked = trainingDB.attendances.some(
-        (attendance) => attendance.traineeId === childTraining.traineeId,
+      const isAlreadyMarked = trainingDB?.attendances?.some(
+        (attendance) => attendance.traineeId === childTraineeWithCommand.id,
       );
 
       if (isAlreadyMarked) continue;
 
       const subscriptionTrainees = await getSubscriptionTrainees({
         db: this.db,
-        subscriptionTraineeId: childTraining.subscriptionTraineeId,
+        subscriptionTraineeId:
+          childTraineeWithCommand.commandSubscriptionTraineeId,
         trainingGroupId: training.groupId as Ids.GroupId,
-        userId: childTraining.trainee.user.id as Ids.UserId,
+        traineeId: childTraineeWithCommand.id,
+      });
+
+      await addTraineeToTrainingGroupIfNotIn({
+        db: this.db,
+        training,
+        traineeId: childTraineeWithCommand.id,
+        traineeGroupIds: childTraineeWithCommand.traineeGroupIds,
       });
 
       await createAttendance({
         db: this.db,
         subscriptionTrainees: subscriptionTrainees,
         trainingId: training.id as Ids.TrainingId,
-        subscriptionTraineeId: childTraining.subscriptionTraineeId,
-        user: childTraining.trainee.user,
+        subscriptionTraineeId:
+          childTraineeWithCommand.commandSubscriptionTraineeId,
+        traineeId: childTraineeWithCommand.id,
+        createdByUserId: this.user.id as Ids.UserId,
       });
     }
 
@@ -90,19 +98,20 @@ export class MarkAttendanceByNotTrainerParent {
     };
   }
 
-  private async validateChildren(
-    childrenTrainings: MarkAttendanceByNotTrainerCommand["childrenTrainings"],
+  private async validateAndAppendChildrenWithAdditionalInfo(
+    childrenAndTrainings: MarkAttendanceByNotTrainerCommand["childrenAndTrainings"],
   ) {
-    if (!childrenTrainings) {
+    if (!childrenAndTrainings) {
       throw new BadRequestException("Children ids are required");
     }
 
-    const isEveryHasTrainingId = childrenTrainings.every(
+    const isEveryHasTrainingId = childrenAndTrainings.every(
       (child) => child.trainingId,
     );
-    const isNoneHasTrainingId = childrenTrainings.every(
+    const isNoneHasTrainingId = childrenAndTrainings.every(
       (child) => !child.trainingId,
     );
+
     if (!isEveryHasTrainingId && !isNoneHasTrainingId) {
       throw new BadRequestException(
         "All children must have training id or not have it at all",
@@ -111,126 +120,72 @@ export class MarkAttendanceByNotTrainerParent {
 
     const parentTraineeLinks = await this.db.parentTraineeLink.findMany({
       where: {
-        traineeId: { in: childrenTrainings.map((child) => child.childId) },
+        traineeId: {
+          in: childrenAndTrainings.map((child) => child.traineeId),
+        },
+        parentId: this.user?.parentProfile?.id,
       },
-      include: {
-        trainee: {
-          include: {
-            groups: { select: { id: true } },
-            user: { include: { traineeProfile: true } },
-          },
+    });
+
+    // Check that all children are linked to the current parent
+    if (parentTraineeLinks.length !== childrenAndTrainings.length) {
+      throw new BadRequestException("Invalid children ids");
+    }
+
+    const childrenAttendances = await this.db.attendance.findMany({
+      where: {
+        traineeId: {
+          in: parentTraineeLinks.map(
+            (parentTraineeLink) => parentTraineeLink.traineeId,
+          ),
+        },
+        trainingId: {
+          in: childrenAndTrainings.map((child) => child.trainingId),
         },
       },
     });
 
-    if (parentTraineeLinks.length !== childrenTrainings.length) {
-      throw new BadRequestException("Invalid children ids");
-    }
+    const childrenWithoutAttendance = childrenAndTrainings.filter(
+      (child) =>
+        !childrenAttendances.some(
+          (attendance) => attendance.traineeId === child.traineeId,
+        ),
+    );
 
-    const childrenTrainingsRecord = childrenTrainings.reduce(
+    const childrenTrainingsRecord = childrenWithoutAttendance.reduce(
       (acc, child) => {
-        acc[child.childId] = { ...child };
+        acc[child.traineeId] = child;
         return acc;
       },
       {} as Record<
-        Ids.ParentTraineeLinkId,
-        MarkAttendanceByNotTrainerCommand["childrenTrainings"][number]
+        Ids.TraineeId,
+        MarkAttendanceByNotTrainerCommand["childrenAndTrainings"][number]
       >,
     );
 
-    return parentTraineeLinks.map((child) => ({
-      ...child,
-      trainingId: childrenTrainingsRecord[child.traineeId]?.trainingId,
-      subscriptionTraineeId:
-        childrenTrainingsRecord[child.traineeId]?.subscriptionTraineeId,
-      traineeGroupIds: child.trainee?.groups?.map(
-        (group) => group.id as Ids.GroupId,
-      ),
-    }));
-  }
-
-  private async checkChildrenAttendance({
-    childrenIds,
-    trainingId,
-  }: {
-    childrenIds: Ids.ParentTraineeLinkId[];
-    trainingId: Ids.TrainingId;
-  }) {
-    const childrenAttendances = await this.db.attendance.findMany({
+    const trainees = await this.db.traineeProfile.findMany({
       where: {
-        traineeId: { in: childrenIds },
-        trainingId,
+        id: {
+          in: childrenWithoutAttendance.map((child) => child.traineeId),
+        },
+      },
+      include: {
+        groups: { select: { id: true } },
       },
     });
 
-    if (childrenAttendances.length === childrenIds.length) {
-      return {
-        status: ScanTrainerQRCodeStatus.alreadyMarked,
-      };
+    if (trainees.length !== childrenWithoutAttendance.length) {
+      throw new BadRequestException("Not all children are trainee");
     }
+
+    return trainees.map((trainee) => ({
+      ...trainee,
+      id: trainee.id as Ids.TraineeId,
+      commandTrainingId: childrenTrainingsRecord[trainee.id]
+        ?.trainingId as Ids.TrainingId,
+      commandSubscriptionTraineeId: childrenTrainingsRecord[trainee.id]
+        ?.subscriptionTraineeId as Ids.SubscriptionTraineeId,
+      traineeGroupIds: trainee.groups?.map((group) => group.id as Ids.GroupId),
+    }));
   }
-
-  // private async createAttendance({
-  //   subscriptionTrainees,
-  //   trainingId,
-  //   subscriptionTraineeId,
-  // }: {
-  //   subscriptionTrainees: (DB.SubscriptionTrainee & {
-  //     subscription: { name: string; type: DB.SubscriptionType };
-  //   })[];
-  //   trainingId: Ids.TrainingId;
-  //   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
-  // }) {
-  //   if (subscriptionTrainees.length > 1 && !subscriptionTraineeId) {
-  //     return {
-  //       subscriptions: subscriptionTrainees.map(this.subscriptionToDto),
-  //       status: ScanTrainerQRCodeStatus.specifySubscription,
-  //     };
-  //   }
-
-  //   if (subscriptionTrainees.length === 0) {
-  //     await this.db.attendance.create({
-  //       data: {
-  //         traineeId: this.user.traineeProfile.id,
-  //         trainingId,
-  //         createdByUserId: this.user.id,
-  //       },
-  //     });
-  //   }
-
-  //   const finalSubscriptionTraineeId =
-  //     subscriptionTraineeId ?? subscriptionTrainees[0].id;
-
-  //   await this.db.attendance.create({
-  //     data: {
-  //       traineeId: this.user.traineeProfile.id,
-  //       trainingId,
-  //       createdByUserId: this.user.id,
-  //       subscriptionTraineeId: finalSubscriptionTraineeId,
-  //       //TODO:do we need this?
-  //       status: DB.AttendanceStatus.PRESENT,
-  //       markedAt: new Date(),
-  //     },
-  //   });
-
-  //   const subscriptionTrainee = await this.db.subscriptionTrainee.findUnique({
-  //     where: { id: finalSubscriptionTraineeId },
-  //     include: {
-  //       subscription: { select: { name: true, type: true } },
-  //     },
-  //   });
-
-  //   if (subscriptionTrainee.subscription.type === DB.SubscriptionType.PERIOD) {
-  //     await this.db.subscriptionTrainee.update({
-  //       where: { id: finalSubscriptionTraineeId },
-  //       data: {
-  //         trainingsLeft: subscriptionTrainee.trainingsLeft - 1,
-  //       },
-  //     });
-  //   }
-
-  //   return {
-  //     status: ScanTrainerQRCodeStatus.success,
-  //   };
-  // }
 }

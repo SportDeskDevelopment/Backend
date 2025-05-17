@@ -45,12 +45,6 @@ describe("MarkAttendanceByNotTrainerTrainee", () => {
     service = new MarkAttendanceByNotTrainerTrainee(prisma, mockUser);
   });
 
-  // afterEach(async () => {
-  //   await prisma.attendance.deleteMany();
-  //   await prisma.subscriptionTrainee.deleteMany();
-  //   await prisma.training.deleteMany();
-  // });
-
   describe("exec", () => {
     it("should return success when marking unpaid attendance only with username and trainerId for group where trainee is a member", async () => {
       const command: MarkAttendanceByNotTrainerCommand = {

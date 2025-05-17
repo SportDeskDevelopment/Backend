@@ -1,212 +1,343 @@
 import { BadRequestException } from "@nestjs/common";
-import { PrismaService } from "../../../prisma/prisma.service";
-import { MarkAttendanceByNotTrainerParent } from "./parent";
-import { Ids } from "../../../kernel/ids";
-import { ScanTrainerQRCodeStatus } from "./constants";
 import {
   AttendanceStatus,
-  TrainingType,
+  LangCode,
+  RoleType,
   SubscriptionActivationType,
+  TrainingType,
 } from "@prisma/client";
-import { MarkAttendanceByNotTrainerCommand } from "./types";
+import { Ids } from "../../../kernel/ids";
+import { PrismaService } from "../../../prisma/prisma.service";
+import { ScanTrainerQRCodeStatus } from "./constants";
+import { MarkAttendanceByNotTrainerParent } from "./parent";
+import { MarkAttendanceByNotTrainerCommand, UserInCommand } from "./types";
 
 describe("MarkAttendanceByNotTrainerParent", () => {
-  let service: MarkAttendanceByNotTrainerParent;
-  let prisma: PrismaService;
+  let parent: MarkAttendanceByNotTrainerParent;
+  let db: PrismaService;
+  let user: UserInCommand;
 
   beforeEach(() => {
-    prisma = new PrismaService();
-    service = new MarkAttendanceByNotTrainerParent(prisma);
-  });
+    db = new PrismaService();
 
-  afterEach(async () => {
-    await prisma.attendance.deleteMany();
-    await prisma.subscriptionTrainee.deleteMany();
-    await prisma.training.deleteMany();
-    await prisma.parentTraineeLink.deleteMany();
+    user = {
+      id: "user-1" as Ids.UserId,
+      username: "user1" as Ids.Username,
+      email: "user1@example.com",
+      name: "User One",
+      passwordHash: "hashed-password",
+      googleId: null,
+      roles: [RoleType.PARENT],
+      activeRole: RoleType.PARENT,
+      preferredLang: LangCode.EN,
+      isEmailConfirmed: true,
+      age: 30,
+      emailConfirmCode: null,
+      photoUrl: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      parentProfile: {
+        id: "parent-1" as Ids.ParentId,
+      },
+      traineeProfile: {
+        id: "trainee-1" as Ids.TraineeId,
+        userId: "user-1",
+        isOnboardingCompleted: true,
+        unregisteredTraineeId: null,
+        groups: [{ id: "group-1" as Ids.GroupId }],
+      },
+    };
+
+    parent = new MarkAttendanceByNotTrainerParent(db, user);
   });
 
   describe("exec", () => {
-    it("Trainee > ", async () => {
+    it("should throw BadRequestException when children info is not provided", async () => {
       const command: MarkAttendanceByNotTrainerCommand = {
-        trainerQrCodeKey: "key",
-        trainerUsername: "trainer" as Ids.TrainerUsername,
-        username: "parent" as Ids.Username,
+        trainerUsername: "trainer1" as Ids.TrainerUsername,
+        trainerQrCodeKey: "qr-key",
+        username: "user1" as Ids.Username,
+        childrenAndTrainings: null,
       };
 
-      await expect(service.exec(command)).rejects.toThrow(BadRequestException);
+      await expect(parent.exec(command)).rejects.toThrow(BadRequestException);
     });
 
-    it("Parent > should throw error when some children have trainingId and some don't", async () => {
+    it("should throw BadRequestException when some children have trainingId and others don't", async () => {
       const command: MarkAttendanceByNotTrainerCommand = {
-        trainerQrCodeKey: "key",
-        trainerUsername: "trainer" as Ids.TrainerUsername,
-        username: "parent" as Ids.Username,
-        childrenTrainings: [
+        trainerUsername: "trainer1" as Ids.TrainerUsername,
+        trainerQrCodeKey: "qr-key",
+        username: "user1" as Ids.Username,
+        childrenAndTrainings: [
           {
-            childId: "child-1" as Ids.ParentTraineeLinkId,
+            traineeId: "trainee-1" as Ids.TraineeId,
             trainingId: "training-1" as Ids.TrainingId,
           },
-          {
-            childId: "child-2" as Ids.ParentTraineeLinkId,
-          },
+          { traineeId: "trainee-2" as Ids.TraineeId },
         ],
       };
 
-      await expect(service.exec(command)).rejects.toThrow(BadRequestException);
+      await expect(parent.exec(command)).rejects.toThrow(BadRequestException);
     });
 
-    it("Parent > should throw error when invalid child id is provided", async () => {
+    it("should throw BadRequestException when children are not linked to parent", async () => {
       const command: MarkAttendanceByNotTrainerCommand = {
-        trainerQrCodeKey: "key",
-        trainerUsername: "trainer" as Ids.TrainerUsername,
-        username: "parent" as Ids.Username,
-        childrenTrainings: [
+        trainerUsername: "trainer1" as Ids.TrainerUsername,
+        trainerQrCodeKey: "qr-key",
+        username: "user1" as Ids.Username,
+        childrenAndTrainings: [
           {
-            childId: "child-1" as Ids.ParentTraineeLinkId,
-            trainingId: "training-1" as Ids.TrainingId,
-          },
-          {
-            childId: "child-2" as Ids.ParentTraineeLinkId,
+            traineeId: "trainee-1" as Ids.TraineeId,
             trainingId: "training-1" as Ids.TrainingId,
           },
         ],
       };
 
-      jest.spyOn(prisma.parentTraineeLink, "findMany").mockResolvedValue([
+      jest.spyOn(db.parentTraineeLink, "findMany").mockResolvedValue([]);
+
+      await expect(parent.exec(command)).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException when not all children are trainee", async () => {
+      const command: MarkAttendanceByNotTrainerCommand = {
+        trainerUsername: "trainer1" as Ids.TrainerUsername,
+        trainerQrCodeKey: "qr-key",
+        username: "user1" as Ids.Username,
+        childrenAndTrainings: [
+          {
+            traineeId: "trainee-1" as Ids.TraineeId,
+            trainingId: "training-1" as Ids.TrainingId,
+          },
+          {
+            traineeId: "trainee-2" as Ids.TraineeId,
+            trainingId: "training-2" as Ids.TrainingId,
+          },
+        ],
+      };
+
+      jest.spyOn(db.traineeProfile, "findMany").mockResolvedValue([
         {
-          id: "child-1" as Ids.ParentTraineeLinkId,
-          parentId: "parent-1",
-          traineeId: "trainee-1",
+          id: "trainee-1" as Ids.TraineeId,
+          userId: "user-1" as Ids.UserId,
+          isOnboardingCompleted: true,
+          unregisteredTraineeId: null,
         },
       ]);
 
-      await expect(service.exec(command)).rejects.toThrow(BadRequestException);
+      await expect(parent.exec(command)).rejects.toThrow(BadRequestException);
     });
 
-    it("Parent > should return success status when we pass trainingId and subscriptionTraineeId", async () => {
-      const command = {
-        trainerQrCodeKey: "key",
-        trainerUsername: "trainer" as Ids.TrainerUsername,
-        childrenTrainings: [
+    it("should successfully mark attendance for valid children", async () => {
+      const command: MarkAttendanceByNotTrainerCommand = {
+        trainerUsername: "trainer1" as Ids.TrainerUsername,
+        trainerQrCodeKey: "qr-key",
+        username: "user1" as Ids.Username,
+        childrenAndTrainings: [
           {
-            childId: "child-1" as Ids.ParentTraineeLinkId,
+            traineeId: "trainee-1" as Ids.TraineeId,
             trainingId: "training-1" as Ids.TrainingId,
-            subscriptionTraineeId: "sub-1" as Ids.SubscriptionTraineeId,
+          },
+          {
+            traineeId: "trainee-2" as Ids.TraineeId,
+            trainingId: "training-2" as Ids.TrainingId,
+            subscriptionTraineeId: "sub-2" as Ids.SubscriptionTraineeId,
           },
         ],
       };
 
-      jest.spyOn(prisma.parentTraineeLink, "findMany").mockResolvedValue([
+      // Mock parent-trainee link
+      jest.spyOn(db.parentTraineeLink, "findMany").mockResolvedValue([
         {
-          id: "child-1" as Ids.ParentTraineeLinkId,
-          parentId: "parent-1",
-          traineeId: "trainee-1",
+          id: "parent-trainee-link-1" as Ids.ParentTraineeLinkId,
+          traineeId: "trainee-1" as Ids.TraineeId,
+          parentId: "parent-1" as Ids.ParentId,
+        },
+        {
+          id: "parent-trainee-link-2" as Ids.ParentTraineeLinkId,
+          traineeId: "trainee-2" as Ids.TraineeId,
+          parentId: "parent-1" as Ids.ParentId,
         },
       ]);
 
-      jest.spyOn(prisma.training, "findMany").mockResolvedValue([
+      jest.spyOn(db.training, "findMany").mockResolvedValue([
         {
-          id: "training-1" as Ids.TrainingId,
-          name: "Training 1",
+          id: "training-1",
+          groupId: "group-1",
           type: TrainingType.GROUP,
+          name: "Training 1",
+          gymId: "gym-1",
           startDate: new Date(),
           durationMin: 60,
+          templateId: "template-1",
+          price: 100,
+        },
+        {
+          id: "training-2",
+          groupId: "group-2",
+          type: TrainingType.GROUP,
+          name: "Training 2",
+          gymId: "gym-2",
+          startDate: new Date(),
+          durationMin: 60,
+          templateId: "template-2",
+          price: 100,
+        },
+      ]);
+
+      // Mock no existing attendances
+      jest.spyOn(db.attendance, "findMany").mockResolvedValue([]);
+
+      jest.spyOn(db.subscriptionTrainee, "findMany").mockResolvedValue([]);
+      jest.spyOn(db.subscriptionTrainee, "findUnique").mockResolvedValue({
+        id: "sub-2" as Ids.SubscriptionTraineeId,
+        traineeId: "trainee-2" as Ids.TraineeId,
+        subscriptionId: "sub-2" as Ids.SubscriptionId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        paymentId: "payment-2",
+        isPaid: true,
+        trainingsLeft: 10,
+        validUntil: new Date(),
+        activationType: SubscriptionActivationType.WHEN_TRAINING_ATTENDED,
+        activeFromDate: new Date(),
+      });
+      jest.spyOn(db.group, "update").mockResolvedValue(null);
+      jest.spyOn(db.attendance, "create").mockResolvedValue(null);
+
+      // Mock trainee profile
+      jest.spyOn(db.traineeProfile, "findMany").mockResolvedValue([
+        {
+          id: "trainee-1" as Ids.TraineeId,
+          userId: "user-1" as Ids.UserId,
+          isOnboardingCompleted: true,
+          unregisteredTraineeId: null,
+        },
+        {
+          id: "trainee-2" as Ids.TraineeId,
+          userId: "user-1" as Ids.UserId,
+          isOnboardingCompleted: true,
+          unregisteredTraineeId: null,
+        },
+      ]);
+
+      // Mock training
+      jest.spyOn(db.training, "findUnique").mockResolvedValue({
+        id: "training-1",
+        groupId: "group-1",
+        type: TrainingType.GROUP,
+        startDate: new Date(),
+        durationMin: 60,
+        name: "Training 1",
+        gymId: "gym-1",
+        templateId: "template-1",
+        price: 100,
+      });
+
+      const result = await parent.exec(command);
+
+      expect(result).toEqual({
+        status: ScanTrainerQRCodeStatus.success,
+      });
+
+      expect(db.attendance.create).toHaveBeenCalledTimes(
+        command.childrenAndTrainings.length,
+      );
+    });
+
+    it("should skip already marked attendance", async () => {
+      const markedChild: MarkAttendanceByNotTrainerCommand["childrenAndTrainings"][number] =
+        {
+          traineeId: "trainee-1" as Ids.TraineeId,
+          subscriptionTraineeId: "sub-1" as Ids.SubscriptionTraineeId,
+        };
+
+      const notMarkedChild: MarkAttendanceByNotTrainerCommand["childrenAndTrainings"][number] =
+        {
+          traineeId: "trainee-2" as Ids.TraineeId,
+        };
+
+      const command: MarkAttendanceByNotTrainerCommand = {
+        trainerUsername: "trainer1" as Ids.TrainerUsername,
+        trainerQrCodeKey: "qr-key",
+        username: "user1" as Ids.Username,
+        childrenAndTrainings: [markedChild, notMarkedChild],
+      };
+
+      jest.spyOn(db.training, "findMany").mockResolvedValue([
+        {
+          id: "training-1",
+          groupId: "group-1",
+          type: TrainingType.GROUP,
+          name: "Training 1",
           gymId: "gym-1",
-          groupId: "group-1" as Ids.GroupId,
+          startDate: new Date(),
+          durationMin: 60,
           templateId: "template-1",
           price: 100,
         },
       ]);
 
-      jest.spyOn(prisma.training, "findUnique").mockResolvedValue({
-        id: "training-1" as Ids.TrainingId,
-        name: "Training 1",
+      jest.spyOn(db.parentTraineeLink, "findMany").mockResolvedValue([
+        {
+          id: "parent-trainee-link-1" as Ids.ParentTraineeLinkId,
+          traineeId: "trainee-1" as Ids.TraineeId,
+          parentId: "parent-1" as Ids.ParentId,
+        },
+        {
+          id: "parent-trainee-link-2" as Ids.ParentTraineeLinkId,
+          traineeId: "trainee-2" as Ids.TraineeId,
+          parentId: "parent-1" as Ids.ParentId,
+        },
+      ]);
+
+      jest.spyOn(db.attendance, "findMany").mockResolvedValue([
+        {
+          id: "attendance-1" as Ids.AttendanceId,
+          traineeId: "trainee-1" as Ids.TraineeId,
+          trainingId: "training-1" as Ids.TrainingId,
+          status: AttendanceStatus.PRESENT,
+          markedAt: new Date(),
+          createdByUserId: "user-1" as Ids.UserId,
+          paymentId: "payment-1",
+          markedAsPaidByTrainerId: "trainer-1" as Ids.TrainerId,
+          subscriptionTraineeId: "sub-1" as Ids.SubscriptionTraineeId,
+          unregisteredTraineeId: null,
+        },
+      ]);
+
+      jest.spyOn(db.traineeProfile, "findMany").mockResolvedValue([
+        {
+          id: "trainee-2" as Ids.TraineeId,
+          userId: "user-2" as Ids.UserId,
+          isOnboardingCompleted: true,
+          unregisteredTraineeId: null,
+        },
+      ]);
+
+      jest.spyOn(db.training, "findUnique").mockResolvedValue({
+        id: "training-1",
+        groupId: "group-1",
         type: TrainingType.GROUP,
         startDate: new Date(),
         durationMin: 60,
+        name: "Training 1",
         gymId: "gym-1",
-        groupId: "group-1" as Ids.GroupId,
         templateId: "template-1",
         price: 100,
       });
 
-      jest.spyOn(prisma.subscriptionTrainee, "findMany").mockResolvedValue([
-        {
-          id: "sub-1" as Ids.SubscriptionTraineeId,
-          traineeId: "trainee-1",
-          subscriptionId: "subscription-1",
-          isPaid: true,
-          trainingsLeft: 10,
-          paymentId: "payment-1",
-          validUntil: new Date(),
-          activeFromDate: new Date(),
-          activationType: SubscriptionActivationType.WHEN_TRAINING_ATTENDED,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
+      jest.spyOn(db.subscriptionTrainee, "findMany").mockResolvedValue([]);
+      jest.spyOn(db.group, "update").mockResolvedValue(null);
+      jest.spyOn(db.attendance, "create").mockResolvedValue(null);
 
-      jest.spyOn(prisma.attendance, "create").mockResolvedValue({
-        id: "attendance-1",
-        trainingId: "training-1",
-        traineeId: "trainee-1",
-        status: AttendanceStatus.PRESENT,
-        unregisteredTraineeId: null,
-        markedAt: new Date(),
-        createdByUserId: "user-1",
-        subscriptionTraineeId: "sub-1",
-        paymentId: null,
-        markedAsPaidByTrainerId: null,
-      });
-
-      const result = await service.exec(command);
+      const result = await parent.exec(command);
 
       expect(result).toEqual({
         status: ScanTrainerQRCodeStatus.success,
       });
-    }, 10000);
-
-    it("Parent > should return already marked status when attendance exists", async () => {
-      const command = {
-        trainerQrCodeKey: "key",
-        trainerUsername: "trainer" as Ids.TrainerUsername,
-        childrenTrainings: [
-          {
-            childId: "child-1" as Ids.ParentTraineeLinkId,
-            trainingId: "training-1" as Ids.TrainingId,
-          },
-        ],
-      };
-
-      jest.spyOn(prisma.parentTraineeLink, "findMany").mockResolvedValue([
-        {
-          id: "child-1" as Ids.ParentTraineeLinkId,
-          parentId: "parent-1",
-          traineeId: "trainee-1",
-        },
-      ]);
-
-      jest.spyOn(prisma.attendance, "findMany").mockResolvedValue([
-        {
-          id: "attendance-1",
-          trainingId: "training-1",
-          traineeId: "trainee-1",
-          status: AttendanceStatus.PRESENT,
-          unregisteredTraineeId: null,
-          markedAt: new Date(),
-          createdByUserId: "user-1",
-          subscriptionTraineeId: null,
-          paymentId: null,
-          markedAsPaidByTrainerId: null,
-        },
-      ]);
-
-      const result = await service.exec(command);
-
-      expect(result).toEqual({
-        status: ScanTrainerQRCodeStatus.alreadyMarked,
-      });
+      expect(db.attendance.create).toHaveBeenCalledTimes(
+        command.childrenAndTrainings.length - 1,
+      );
     });
   });
 });
