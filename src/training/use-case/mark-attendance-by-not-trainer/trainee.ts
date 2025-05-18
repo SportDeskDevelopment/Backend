@@ -48,12 +48,16 @@ export class MarkAttendanceByNotTrainerTrainee {
       return { status: ScanTrainerQRCodeStatus.alreadyMarked };
     }
 
-    const subscriptionTrainees = await getSubscriptionTrainees({
+    const subscriptionTraineesResponse = await getSubscriptionTrainees({
       subscriptionTraineeId: command.subscriptionTraineeId,
       trainingGroupId: training.groupId as Ids.GroupId,
       db: this.db,
       userId: this.user.id as Ids.UserId,
     });
+
+    if (subscriptionTraineesResponse.status) {
+      return subscriptionTraineesResponse;
+    }
 
     await addTraineeToTrainingGroupIfNotIn({
       db: this.db,
@@ -65,7 +69,7 @@ export class MarkAttendanceByNotTrainerTrainee {
     });
 
     return createAttendance({
-      subscriptionTrainees,
+      subscriptionTrainees: subscriptionTraineesResponse.subscriptionTrainees,
       trainingId: training.id as Ids.TrainingId,
       subscriptionTraineeId: command.subscriptionTraineeId,
       db: this.db,

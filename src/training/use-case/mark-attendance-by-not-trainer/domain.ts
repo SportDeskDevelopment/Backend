@@ -135,6 +135,23 @@ export function getTrainingStatus({
   }
 }
 
+type SubscriptionTrainee = DB.Prisma.SubscriptionTraineeGetPayload<{
+  include: {
+    subscription: {
+      select: { name: true; type: true };
+    };
+  };
+}>;
+
+type GetSubscriptionTraineesResponse = {
+  status?: (typeof ScanTrainerQRCodeStatus)[keyof typeof ScanTrainerQRCodeStatus];
+  mappedSubscriptionTrainees?: {
+    id: string;
+    name: string;
+  }[];
+  subscriptionTrainees?: SubscriptionTrainee[];
+};
+
 export async function getSubscriptionTrainees({
   subscriptionTraineeId,
   trainingGroupId,
@@ -147,7 +164,7 @@ export async function getSubscriptionTrainees({
   db: PrismaService;
   userId?: Ids.UserId;
   traineeId?: Ids.TraineeId;
-}) {
+}): Promise<GetSubscriptionTraineesResponse> {
   const commonWhere: DB.Prisma.SubscriptionTraineeWhereInput = {
     isPaid: true,
     AND: [
@@ -197,10 +214,12 @@ export async function getSubscriptionTrainees({
       );
     }
 
-    return [subscriptionTrainee];
+    return {
+      subscriptionTrainees: [subscriptionTrainee],
+    };
   }
 
-  return db.subscriptionTrainee.findMany({
+  const subscriptionTrainees = await db.subscriptionTrainee.findMany({
     where: {
       ...commonWhere,
       trainee: { OR: [{ userId }, { id: traineeId }] },
@@ -244,6 +263,15 @@ export async function getSubscriptionTrainees({
       },
     },
   });
+
+  if (subscriptionTrainees.length > 1) {
+    return {
+      mappedSubscriptionTrainees: subscriptionTrainees.map(subscriptionToDto),
+      status: ScanTrainerQRCodeStatus.specifySubscription,
+    };
+  }
+
+  return { subscriptionTrainees };
 }
 
 export async function createAttendance({
@@ -254,9 +282,13 @@ export async function createAttendance({
   traineeId,
   createdByUserId,
 }: {
-  subscriptionTrainees: (DB.SubscriptionTrainee & {
-    subscription: { name: string; type: DB.SubscriptionType };
-  })[];
+  subscriptionTrainees: DB.Prisma.SubscriptionTraineeGetPayload<{
+    include: {
+      subscription: {
+        select: { name: true; type: true };
+      };
+    };
+  }>[];
   trainingId: Ids.TrainingId;
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
   db: PrismaService;

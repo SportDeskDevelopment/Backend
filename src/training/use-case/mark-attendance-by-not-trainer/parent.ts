@@ -73,7 +73,7 @@ export class MarkAttendanceByNotTrainerParent {
 
       if (isAlreadyMarked) continue;
 
-      const subscriptionTrainees = await getSubscriptionTrainees({
+      const subscriptionTraineeResponse = await getSubscriptionTrainees({
         db: this.db,
         subscriptionTraineeId:
           childTraineeWithCommand.commandSubscriptionTraineeId,
@@ -90,7 +90,7 @@ export class MarkAttendanceByNotTrainerParent {
 
       await createAttendance({
         db: this.db,
-        subscriptionTrainees: subscriptionTrainees,
+        subscriptionTrainees: subscriptionTraineeResponse.subscriptionTrainees,
         trainingId: training.id as Ids.TrainingId,
         subscriptionTraineeId:
           childTraineeWithCommand.commandSubscriptionTraineeId,
