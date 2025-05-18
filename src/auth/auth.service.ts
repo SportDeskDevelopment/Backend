@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -115,7 +116,10 @@ export class AuthService {
     }
 
     if (!user.isEmailConfirmed) {
-      throw new UnauthorizedException("Email is not Confirmed.");
+      throw new ForbiddenException({
+        message: "Email is not confirmed",
+        error: "EMAIL_NOT_CONFIRMED",
+      });
     }
 
     const isPasswordValid = await bcrypt.compare(

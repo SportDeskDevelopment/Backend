@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import * as DB from "@prisma/client";
 type Command = {
@@ -70,10 +75,15 @@ export class GetTrainingAttendanceUseCase {
 
     const trainer = await this.db.trainerProfile.findUnique({
       where: { userId: trainerUserId },
+      include: { user: true },
     });
 
     if (!trainer) {
       throw new NotFoundException("Trainer not found");
+    }
+
+    if (!trainer.user.isEmailConfirmed) {
+      throw new UnauthorizedException("Email not verified");
     }
 
     const searchQuery = search
