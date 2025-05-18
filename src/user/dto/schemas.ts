@@ -13,6 +13,18 @@ export const getCurrentUserResponse = zod.object({
   preferredLang: zod.enum(["en", "ua", "pl"]),
   activeRole: zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"]),
   roles: zod.array(zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"])),
+  trainerOnboardingLeft: zod
+    .array(
+      zod.enum([
+        "gymCreation",
+        "groupCreation",
+        "subscriptionCreation",
+        "trainingCreation",
+        "contactInformationCreation",
+        "traineeCreation",
+      ]),
+    )
+    .optional(),
 });
 
 export const getUserOnboardingResponse = zod.object({

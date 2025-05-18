@@ -10,11 +10,11 @@ import {
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { LoggedInUser } from "../common/decorators";
 import { JwtPayload } from "../common/types/jwt-payload";
-import { InferSchema, ZodPipe } from "../shared/lib/zod";
-import { UserDto, UserDtoSchemas } from "./dto";
-import { UserService } from "./user.service";
-import { InitiateRoleUseCase } from "./use-cases/initiate-role";
 import { UserId } from "../kernel/ids/ids";
+import { InferSchema, ResponseValidation, ZodPipe } from "../shared/lib/zod";
+import { UserDto, UserDtoSchemas } from "./dto";
+import { InitiateRoleUseCase } from "./use-cases/initiate-role";
+import { UserService } from "./user.service";
 
 @Controller("users")
 @UseGuards(JwtAuthGuard)
@@ -25,6 +25,7 @@ export class UserController {
   ) {}
 
   @Get("me")
+  @ResponseValidation(UserDtoSchemas.getCurrentUserResponse)
   async getCurrentUser(@LoggedInUser() user: JwtPayload) {
     return this.userService.getCurrentUser(user.id);
   }

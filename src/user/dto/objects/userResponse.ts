@@ -7,6 +7,7 @@
 import type { UserResponsePreferredLang } from "./userResponsePreferredLang";
 import type { UserResponseActiveRole } from "./userResponseActiveRole";
 import type { UserResponseRolesItem } from "./userResponseRolesItem";
+import type { UserResponseTrainerOnboardingLeftItem } from "./userResponseTrainerOnboardingLeftItem";
 
 export interface UserResponse {
   id: string;
@@ -15,4 +16,5 @@ export interface UserResponse {
   preferredLang: UserResponsePreferredLang;
   activeRole: UserResponseActiveRole;
   roles: UserResponseRolesItem[];
+  trainerOnboardingLeft?: UserResponseTrainerOnboardingLeftItem[];
 }
