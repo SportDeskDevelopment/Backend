@@ -28,6 +28,12 @@ export class MarkAttendanceByNotTrainerParent {
         command.childrenAndTrainings,
       );
 
+    if (childrenTraineeWithCommandInfo.length === 0) {
+      return {
+        status: ScanTrainerQRCodeStatus.alreadyMarked,
+      };
+    }
+
     const activeTrainings = await getActiveTrainingsFromDB({
       trainerUsername: command.trainerUsername,
       db: this.db,

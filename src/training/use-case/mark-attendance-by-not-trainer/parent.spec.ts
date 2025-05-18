@@ -127,6 +127,70 @@ describe("MarkAttendanceByNotTrainerParent", () => {
       await expect(parent.exec(command)).rejects.toThrow(BadRequestException);
     });
 
+    it("should return alreadyMarked status when all children are already marked", async () => {
+      const command: MarkAttendanceByNotTrainerCommand = {
+        trainerUsername: "trainer1" as Ids.TrainerUsername,
+        trainerQrCodeKey: "qr-key",
+        username: "user1" as Ids.Username,
+        childrenAndTrainings: [
+          {
+            traineeId: "trainee-1" as Ids.TraineeId,
+            trainingId: "training-1" as Ids.TrainingId,
+          },
+          {
+            traineeId: "trainee-2" as Ids.TraineeId,
+            trainingId: "training-2" as Ids.TrainingId,
+          },
+        ],
+      };
+
+      jest.spyOn(db.parentTraineeLink, "findMany").mockResolvedValue([
+        {
+          id: "parent-trainee-link-1" as Ids.ParentTraineeLinkId,
+          traineeId: "trainee-1" as Ids.TraineeId,
+          parentId: "parent-1" as Ids.ParentId,
+        },
+        {
+          id: "parent-trainee-link-2" as Ids.ParentTraineeLinkId,
+          traineeId: "trainee-2" as Ids.TraineeId,
+          parentId: "parent-1" as Ids.ParentId,
+        },
+      ]);
+
+      jest.spyOn(db.attendance, "findMany").mockResolvedValue([
+        {
+          id: "attendance-1" as Ids.AttendanceId,
+          traineeId: "trainee-1" as Ids.TraineeId,
+          trainingId: "training-1" as Ids.TrainingId,
+          status: AttendanceStatus.PRESENT,
+          markedAt: new Date(),
+          createdByUserId: "user-1" as Ids.UserId,
+          paymentId: "payment-1",
+          markedAsPaidByTrainerId: "trainer-1" as Ids.TrainerId,
+          subscriptionTraineeId: "sub-1" as Ids.SubscriptionTraineeId,
+          unregisteredTraineeId: null,
+        },
+        {
+          id: "attendance-2" as Ids.AttendanceId,
+          traineeId: "trainee-2" as Ids.TraineeId,
+          trainingId: "training-2" as Ids.TrainingId,
+          status: AttendanceStatus.PRESENT,
+          markedAt: new Date(),
+          createdByUserId: "user-1" as Ids.UserId,
+          paymentId: "payment-2",
+          markedAsPaidByTrainerId: "trainer-1" as Ids.TrainerId,
+          subscriptionTraineeId: "sub-2" as Ids.SubscriptionTraineeId,
+          unregisteredTraineeId: null,
+        },
+      ]);
+
+      const result = await parent.exec(command);
+
+      expect(result).toEqual({
+        status: ScanTrainerQRCodeStatus.alreadyMarked,
+      });
+    });
+
     it("should successfully mark attendance for valid children", async () => {
       const command: MarkAttendanceByNotTrainerCommand = {
         trainerUsername: "trainer1" as Ids.TrainerUsername,
