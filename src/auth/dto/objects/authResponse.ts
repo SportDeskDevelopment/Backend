@@ -4,9 +4,9 @@
  * Authentication API
  * OpenAPI spec version: 1.0.0
  */
-import type { User } from "./user";
 
 export interface AuthResponse {
   accessToken: string;
-  user: User;
+  /** Whether the user is logging in for the first time */
+  isFirstLogin?: boolean;
 }

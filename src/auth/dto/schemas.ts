@@ -26,6 +26,7 @@ export const confirmEmailBody = zod.object({
 
 export const confirmEmailResponse = zod.object({
   message: zod.string(),
+  accessToken: zod.string(),
 });
 
 export const loginUserBody = zod.object({
@@ -35,36 +36,18 @@ export const loginUserBody = zod.object({
 
 export const loginUserResponse = zod.object({
   accessToken: zod.string(),
-  user: zod.object({
-    id: zod.string(),
-    email: zod.string(),
-    name: zod.string(),
-    activeRole: zod.enum([
-      "TRAINER",
-      "TRAINEE",
-      "PARENT",
-      "ADMIN",
-      "SUPERADMIN",
-    ]),
-    isEmailConfirmed: zod.boolean(),
-  }),
+  isFirstLogin: zod
+    .boolean()
+    .optional()
+    .describe("Whether the user is logging in for the first time"),
 });
 
 export const refreshTokenResponse = zod.object({
   accessToken: zod.string(),
-  user: zod.object({
-    id: zod.string(),
-    email: zod.string(),
-    name: zod.string(),
-    activeRole: zod.enum([
-      "TRAINER",
-      "TRAINEE",
-      "PARENT",
-      "ADMIN",
-      "SUPERADMIN",
-    ]),
-    isEmailConfirmed: zod.boolean(),
-  }),
+  isFirstLogin: zod
+    .boolean()
+    .optional()
+    .describe("Whether the user is logging in for the first time"),
 });
 
 export const googleAuthBody = zod.object({
@@ -73,19 +56,10 @@ export const googleAuthBody = zod.object({
 
 export const googleAuthResponse = zod.object({
   accessToken: zod.string(),
-  user: zod.object({
-    id: zod.string(),
-    email: zod.string(),
-    name: zod.string(),
-    activeRole: zod.enum([
-      "TRAINER",
-      "TRAINEE",
-      "PARENT",
-      "ADMIN",
-      "SUPERADMIN",
-    ]),
-    isEmailConfirmed: zod.boolean(),
-  }),
+  isFirstLogin: zod
+    .boolean()
+    .optional()
+    .describe("Whether the user is logging in for the first time"),
 });
 
 export const logoutUserResponse = zod.object({
