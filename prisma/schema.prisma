@@ -87,6 +87,7 @@ model User {
   emailConfirmCode String?
   username         String    @unique
   photoUrl         String?
+  lastLoginAt      DateTime?
 
   roles              RoleType[]
   trainerProfile     TrainerProfile?

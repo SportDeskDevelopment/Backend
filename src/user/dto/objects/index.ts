@@ -31,3 +31,4 @@ export * from "./userResponsePreferredLang";
 export * from "./userResponseRolesItem";
 export * from "./userRole";
 export * from "./userRoleType";
+export * from "./userResponseTrainerOnboardingLeftItem";

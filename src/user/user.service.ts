@@ -47,12 +47,12 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   private readonly OnboardingStep = {
-    GYM_CREATION: "gym-creation",
-    GROUP_CREATION: "group-creation",
-    SUBSCRIPTION_CREATION: "subscription-creation",
-    TRAINING_CREATION: "training-creation",
-    CONTACT_INFORMATION_CREATION: "contact-information-creation",
-    TRAINEE_CREATION: "trainee-creation",
+    GYM_CREATION: "gymCreation",
+    GROUP_CREATION: "groupCreation",
+    SUBSCRIPTION_CREATION: "subscriptionCreation",
+    TRAINING_CREATION: "trainingCreation",
+    CONTACT_INFORMATION_CREATION: "contactInformationCreation",
+    TRAINEE_CREATION: "traineeCreation",
   } as const;
 
   async getCurrentUser(userId: string) {
@@ -96,7 +96,7 @@ export class UserService {
 
     return {
       ...user,
-      ...this.checkOnboardingStatus(user),
+      ...this.getOnboardingStatus(user),
     };
   }
 
@@ -156,7 +156,7 @@ export class UserService {
     }[lang];
   }
 
-  private async checkOnboardingStatus(user: SelectedUser) {
+  private async getOnboardingStatus(user: SelectedUser) {
     const trainerStepsLeft: string[] = [];
     const traineeStepsLeft: string[] = [];
     const parentStepsLeft: string[] = [];

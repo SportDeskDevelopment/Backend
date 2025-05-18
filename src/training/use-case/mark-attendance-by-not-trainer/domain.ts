@@ -135,17 +135,36 @@ export function getTrainingStatus({
   }
 }
 
+type SubscriptionTrainee = DB.Prisma.SubscriptionTraineeGetPayload<{
+  include: {
+    subscription: {
+      select: { name: true; type: true };
+    };
+  };
+}>;
+
+type GetSubscriptionTraineesResponse = {
+  status?: (typeof ScanTrainerQRCodeStatus)[keyof typeof ScanTrainerQRCodeStatus];
+  mappedSubscriptionTrainees?: {
+    id: string;
+    name: string;
+  }[];
+  subscriptionTrainees?: SubscriptionTrainee[];
+};
+
 export async function getSubscriptionTrainees({
   subscriptionTraineeId,
   trainingGroupId,
   db,
   userId,
+  traineeId,
 }: {
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
   trainingGroupId?: Ids.GroupId;
   db: PrismaService;
-  userId: Ids.UserId;
-}) {
+  userId?: Ids.UserId;
+  traineeId?: Ids.TraineeId;
+}): Promise<GetSubscriptionTraineesResponse> {
   const commonWhere: DB.Prisma.SubscriptionTraineeWhereInput = {
     isPaid: true,
     AND: [
@@ -190,16 +209,20 @@ export async function getSubscriptionTrainees({
     });
 
     if (!subscriptionTrainee) {
-      throw new NotFoundException("Subscription trainee not found");
+      throw new NotFoundException(
+        `Subscription trainee not found [subscriptionTraineeId]: ${subscriptionTraineeId}, [traineeId]: ${traineeId}`,
+      );
     }
 
-    return [subscriptionTrainee];
+    return {
+      subscriptionTrainees: [subscriptionTrainee],
+    };
   }
 
-  return db.subscriptionTrainee.findMany({
+  const subscriptionTrainees = await db.subscriptionTrainee.findMany({
     where: {
       ...commonWhere,
-      trainee: { userId },
+      trainee: { OR: [{ userId }, { id: traineeId }] },
       subscription: {
         OR: [
           {
@@ -240,6 +263,15 @@ export async function getSubscriptionTrainees({
       },
     },
   });
+
+  if (subscriptionTrainees.length > 1) {
+    return {
+      mappedSubscriptionTrainees: subscriptionTrainees.map(subscriptionToDto),
+      status: ScanTrainerQRCodeStatus.specifySubscription,
+    };
+  }
+
+  return { subscriptionTrainees };
 }
 
 export async function createAttendance({
@@ -247,15 +279,21 @@ export async function createAttendance({
   trainingId,
   subscriptionTraineeId,
   db,
-  user,
+  traineeId,
+  createdByUserId,
 }: {
-  subscriptionTrainees: (DB.SubscriptionTrainee & {
-    subscription: { name: string; type: DB.SubscriptionType };
-  })[];
+  subscriptionTrainees: DB.Prisma.SubscriptionTraineeGetPayload<{
+    include: {
+      subscription: {
+        select: { name: true; type: true };
+      };
+    };
+  }>[];
   trainingId: Ids.TrainingId;
   subscriptionTraineeId?: Ids.SubscriptionTraineeId;
   db: PrismaService;
-  user: DB.User & { traineeProfile: DB.TraineeProfile };
+  traineeId: Ids.TraineeId;
+  createdByUserId: Ids.UserId;
 }) {
   if (subscriptionTrainees.length > 1 && !subscriptionTraineeId) {
     return {
@@ -267,9 +305,9 @@ export async function createAttendance({
   if (subscriptionTrainees.length === 0) {
     await db.attendance.create({
       data: {
-        traineeId: user.traineeProfile.id,
+        traineeId,
         trainingId,
-        createdByUserId: user.id,
+        createdByUserId,
       },
     });
 
@@ -283,9 +321,9 @@ export async function createAttendance({
 
   await db.attendance.create({
     data: {
-      traineeId: user.traineeProfile.id,
+      traineeId,
       trainingId,
-      createdByUserId: user.id,
+      createdByUserId,
       subscriptionTraineeId: finalSubscriptionTraineeId,
       //TODO:do we need this?
       status: DB.AttendanceStatus.PRESENT,
@@ -323,4 +361,29 @@ export function subscriptionToDto(
     id: traineeSubscription.id,
     name: traineeSubscription.subscription.name,
   };
+}
+
+export async function addTraineeToTrainingGroupIfNotIn({
+  training,
+  db,
+  traineeId,
+  traineeGroupIds,
+}: {
+  training: DB.Training;
+  db: PrismaService;
+  traineeId: Ids.TraineeId;
+  traineeGroupIds?: Ids.GroupId[];
+}) {
+  if (!training.groupId) return;
+
+  const isInThisGroup = traineeGroupIds?.some(
+    (groupId) => groupId === training.groupId,
+  );
+
+  if (isInThisGroup) return;
+
+  await db.group.update({
+    where: { id: training.groupId },
+    data: { trainees: { connect: { id: traineeId } } },
+  });
 }

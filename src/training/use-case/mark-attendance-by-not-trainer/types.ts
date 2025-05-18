@@ -14,9 +14,9 @@ export type MarkAttendanceByNotTrainerCommand = {
   // ***
 
   // *** parent mark attendance for children
-  childrenTrainings?: {
+  childrenAndTrainings?: {
     trainingId?: Ids.TrainingId;
-    childId: Ids.ParentTraineeLinkId;
+    traineeId: Ids.TraineeId;
     subscriptionTraineeId?: Ids.SubscriptionTraineeId;
   }[];
   // ***

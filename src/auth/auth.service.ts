@@ -144,7 +144,9 @@ export class AuthService {
       userAgent: info.userAgent,
     });
 
-    return tokens;
+    const isFirstLogin = user.lastLoginAt === null;
+
+    return { tokens, isFirstLogin };
   }
 
   async refresh(dto: RefreshDto) {

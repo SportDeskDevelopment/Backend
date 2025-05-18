@@ -39,7 +39,7 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const tokens = await this.authService.login(body, {
+    const { tokens, isFirstLogin } = await this.authService.login(body, {
       ip: req.ip,
       userAgent: req.headers["user-agent"],
     });
@@ -51,7 +51,10 @@ export class AuthController {
       maxAge: this.config.refreshTokenExpirationMinutes * 60 * 1000,
     });
 
-    return res.json({ accessToken: tokens.accessToken });
+    return res.json({
+      accessToken: tokens.accessToken,
+      isFirstLogin,
+    });
   }
 
   @Post("confirm-email")
