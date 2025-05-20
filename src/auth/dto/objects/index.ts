@@ -12,6 +12,7 @@ export * from "./confirmEmailResponse";
 export * from "./confirmEmailResponseResponse";
 export * from "./emailExistsResponse";
 export * from "./emailNotConfirmedResponse";
+export * from "./emailNotConfirmedResponseError";
 export * from "./googleAuthRequest";
 export * from "./invalidCodeResponse";
 export * from "./invalidCredentialsResponse";

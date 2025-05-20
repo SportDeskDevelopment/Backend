@@ -29,9 +29,9 @@ export class InitiateRoleUseCase {
 
     // don't create trainee profile because we already created it in register process
     const operation = {
-      [DB.RoleType.TRAINER]: this.createTrainerProfile,
-      [DB.RoleType.PARENT]: this.createParentProfile,
-      [DB.RoleType.ADMIN]: this.createAdminProfile,
+      [DB.RoleType.TRAINER]: this.createTrainerProfile.bind(this),
+      [DB.RoleType.PARENT]: this.createParentProfile.bind(this),
+      [DB.RoleType.ADMIN]: this.createAdminProfile.bind(this),
     }[role];
 
     const profileId = await operation(userId);
