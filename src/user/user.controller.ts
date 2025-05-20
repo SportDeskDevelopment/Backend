@@ -15,6 +15,7 @@ import { InferSchema, ResponseValidation, ZodPipe } from "../shared/lib/zod";
 import { UserDto, UserDtoSchemas } from "./dto";
 import { InitiateRoleUseCase } from "./use-cases/initiate-role";
 import { UserService } from "./user.service";
+import { mapUserToUserResponse } from "./mappers/me";
 
 @Controller("users")
 @UseGuards(JwtAuthGuard)
@@ -26,8 +27,12 @@ export class UserController {
 
   @Get("me")
   @ResponseValidation(UserDtoSchemas.getCurrentUserResponse)
-  async getCurrentUser(@LoggedInUser() user: JwtPayload) {
-    return this.userService.getCurrentUser(user.id);
+  async getCurrentUser(
+    @LoggedInUser() user: JwtPayload,
+  ): Promise<UserDto.UserResponse> {
+    const me = await this.userService.getCurrentUser(user.id);
+    // TODO: fix return type
+    return mapUserToUserResponse(me as any);
   }
 
   @Patch("me/lang")

@@ -7,7 +7,9 @@
 import type { UserResponsePreferredLang } from "./userResponsePreferredLang";
 import type { UserResponseActiveRole } from "./userResponseActiveRole";
 import type { UserResponseRolesItem } from "./userResponseRolesItem";
-import type { UserResponseTrainerOnboardingLeftItem } from "./userResponseTrainerOnboardingLeftItem";
+import type { TrainerProfile } from "./trainerProfile";
+import type { TraineeProfile } from "./traineeProfile";
+import type { ParentProfile } from "./parentProfile";
 
 export interface UserResponse {
   id: string;
@@ -16,5 +18,13 @@ export interface UserResponse {
   preferredLang: UserResponsePreferredLang;
   activeRole: UserResponseActiveRole;
   roles: UserResponseRolesItem[];
-  trainerOnboardingLeft?: UserResponseTrainerOnboardingLeftItem[];
+  /** @nullable */
+  trainerStepsLeft: string[] | null;
+  /** @nullable */
+  traineeStepsLeft: string[] | null;
+  /** @nullable */
+  parentStepsLeft: string[] | null;
+  trainerProfile: TrainerProfile;
+  traineeProfile: TraineeProfile;
+  parentProfile: ParentProfile;
 }

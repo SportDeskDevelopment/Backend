@@ -10,7 +10,7 @@ export type UserResponsePreferredLang =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserResponsePreferredLang = {
-  en: "en",
-  ua: "ua",
-  pl: "pl",
+  EN: "EN",
+  UA: "UA",
+  PL: "PL",
 } as const;

@@ -8,10 +8,6 @@
 /**
  * @nullable
  */
-export type TrainerProfile = {
-  gyms?: string[];
-  groups?: string[];
-  trainings?: string[];
+export type ParentProfile = {
   isOnboardingCompleted?: boolean;
-  subscriptions?: string[];
 } | null;

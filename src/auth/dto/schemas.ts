@@ -6,11 +6,9 @@
  */
 import { z as zod } from "zod";
 
-export const registerUserBodyPasswordMin = 6;
-
 export const registerUserBody = zod.object({
   email: zod.string().email(),
-  password: zod.string().min(registerUserBodyPasswordMin),
+  password: zod.string(),
   name: zod.string(),
   username: zod.string(),
 });

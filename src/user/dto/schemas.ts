@@ -10,21 +10,31 @@ export const getCurrentUserResponse = zod.object({
   id: zod.string(),
   email: zod.string(),
   name: zod.string(),
-  preferredLang: zod.enum(["en", "ua", "pl"]),
+  preferredLang: zod.enum(["EN", "UA", "PL"]),
   activeRole: zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"]),
   roles: zod.array(zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"])),
-  trainerOnboardingLeft: zod
-    .array(
-      zod.enum([
-        "gymCreation",
-        "groupCreation",
-        "subscriptionCreation",
-        "trainingCreation",
-        "contactInformationCreation",
-        "traineeCreation",
-      ]),
-    )
-    .optional(),
+  trainerStepsLeft: zod.array(zod.string()).nullable(),
+  traineeStepsLeft: zod.array(zod.string()).nullable(),
+  parentStepsLeft: zod.array(zod.string()).nullable(),
+  trainerProfile: zod
+    .object({
+      gyms: zod.array(zod.string()).optional(),
+      groups: zod.array(zod.string()).optional(),
+      trainings: zod.array(zod.string()).optional(),
+      isOnboardingCompleted: zod.boolean().optional(),
+      subscriptions: zod.array(zod.string()).optional(),
+    })
+    .nullable(),
+  traineeProfile: zod
+    .object({
+      isOnboardingCompleted: zod.boolean().optional(),
+    })
+    .nullable(),
+  parentProfile: zod
+    .object({
+      isOnboardingCompleted: zod.boolean().optional(),
+    })
+    .nullable(),
 });
 
 export const getUserOnboardingResponse = zod.object({
