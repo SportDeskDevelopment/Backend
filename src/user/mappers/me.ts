@@ -16,19 +16,17 @@ export const mapUserToUserResponse = (
     traineeStepsLeft?: string[] | null;
     parentStepsLeft?: string[] | null;
   },
-): UserResponse => {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    preferredLang: user.preferredLang,
-    activeRole: user.activeRole as UserDto.UserResponseActiveRole,
-    roles: user.roles as UserDto.UserResponseRolesItem[],
-    trainerStepsLeft: user.trainerStepsLeft ?? [],
-    traineeStepsLeft: user.traineeStepsLeft ?? [],
-    parentStepsLeft: user.parentStepsLeft ?? [],
-    trainerProfile: user.trainerProfile ?? null,
-    traineeProfile: user.traineeProfile ?? null,
-    parentProfile: user.parentProfile ?? null,
-  };
-};
+): UserResponse => ({
+  id: user.id,
+  email: user.email,
+  name: user.name,
+  preferredLang: user.preferredLang,
+  activeRole: user.activeRole as UserDto.UserResponseActiveRole,
+  roles: user.roles as UserDto.UserResponseRolesItem[],
+  trainerStepsLeft: user.trainerStepsLeft ?? [],
+  traineeStepsLeft: user.traineeStepsLeft ?? [],
+  parentStepsLeft: user.parentStepsLeft ?? [],
+  trainerProfile: user.trainerProfile ?? null,
+  traineeProfile: user.traineeProfile ?? null,
+  parentProfile: user.parentProfile ?? null,
+});
