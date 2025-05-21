@@ -21,6 +21,7 @@ async function main() {
       name: "Admin User",
       username: "adminUsername",
       passwordHash,
+      isEmailConfirmed: true,
       roles: [RoleType.ADMIN],
       adminProfile: {
         create: {},
@@ -38,6 +39,7 @@ async function main() {
       username: "trainerUsername",
       passwordHash,
       roles: [RoleType.TRAINER],
+      isEmailConfirmed: true,
       trainerProfile: {
         create: {
           id: "cm9svevvc0003ud5k913mldd4",
@@ -67,6 +69,7 @@ async function main() {
       name: "Trainee User",
       username: "traineeUsername",
       passwordHash,
+      isEmailConfirmed: true,
       roles: [RoleType.TRAINEE],
       traineeProfile: {
         create: {},
@@ -83,6 +86,7 @@ async function main() {
       name: "Parent User",
       username: "parentUsername",
       passwordHash,
+      isEmailConfirmed: true,
       roles: [RoleType.PARENT],
       parentProfile: {
         create: {},
