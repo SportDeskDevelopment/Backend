@@ -18,7 +18,7 @@ async function main() {
   const adminUser = await prisma.user.create({
     data: {
       email: "admin@example.com",
-      name: "Admin User",
+      firstName: "Admin",
       username: "adminUsername",
       passwordHash,
       isEmailConfirmed: true,
@@ -35,7 +35,7 @@ async function main() {
   const trainerUser = await prisma.user.create({
     data: {
       email: "trainer@example.com",
-      name: "Trainer User",
+      firstName: "Trainer",
       username: "trainerUsername",
       passwordHash,
       roles: [RoleType.TRAINER],
@@ -66,7 +66,7 @@ async function main() {
   const traineeUser = await prisma.user.create({
     data: {
       email: "trainee@example.com",
-      name: "Trainee User",
+      firstName: "Trainee",
       username: "traineeUsername",
       passwordHash,
       isEmailConfirmed: true,
@@ -83,7 +83,7 @@ async function main() {
   const parentUser = await prisma.user.create({
     data: {
       email: "parent@example.com",
-      name: "Parent User",
+      firstName: "Parent",
       username: "parentUsername",
       passwordHash,
       isEmailConfirmed: true,

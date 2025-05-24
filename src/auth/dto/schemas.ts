@@ -9,7 +9,8 @@ import { z as zod } from "zod";
 export const registerUserBody = zod.object({
   email: zod.string().email(),
   password: zod.string(),
-  name: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string().optional(),
   username: zod.string(),
 });
 

@@ -15,7 +15,8 @@ type SelectedUser = Prisma.UserGetPayload<{
     username: true;
     email: true;
     roles: true;
-    name: true;
+    firstName: true;
+    lastName: true;
     preferredLang: true;
     activeRole: true;
     trainerProfile: {
@@ -63,7 +64,8 @@ export class UserService {
         username: true,
         email: true,
         roles: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         preferredLang: true,
         activeRole: true,
         trainerProfile: {

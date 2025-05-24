@@ -27,7 +27,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
       user = await this.prisma.user.create({
         data: {
           email: emails[0].value,
-          name: displayName,
+          firstName: displayName,
           googleId: id,
           username: displayName,
         },

@@ -14,7 +14,8 @@ import type { ParentProfile } from "./parentProfile";
 export interface UserResponse {
   id: string;
   email: string;
-  name: string;
+  firstName?: string;
+  lastName?: string;
   preferredLang: UserResponsePreferredLang;
   activeRole: UserResponseActiveRole;
   roles: UserResponseRolesItem[];

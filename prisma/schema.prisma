@@ -79,7 +79,8 @@ model User {
   email            String    @unique
   passwordHash     String?
   googleId         String?   @unique
-  name             String
+  firstName        String?
+  lastName         String?
   preferredLang    LangCode  @default(EN)
   activeRole       RoleType?
   isEmailConfirmed Boolean   @default(false)

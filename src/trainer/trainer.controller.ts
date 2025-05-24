@@ -134,11 +134,11 @@ export class TrainerController {
   async createGyms(
     @LoggedInUser() user: JwtPayload,
     @Body(new ZodPipe(TrainerDtoSchemas.createGymsBody))
-    body: TrainerDto.CreateGymsRequest,
+    body: TrainerDto.CreateGymsDto,
   ) {
     return this.createGymUseCase.exec({
       ...body,
-      trainerUserId: user.id as UserId,
+      trainerUserId: (body.trainerUserId ?? user.id) as UserId,
     });
   }
 
@@ -172,7 +172,7 @@ export class TrainerController {
   ) {
     return this.createTrainingsUseCase.exec({
       ...body,
-      trainerUserId: user.id as UserId,
+      trainerUserId: (body.trainerUserId ?? user.id) as UserId,
     });
   }
 

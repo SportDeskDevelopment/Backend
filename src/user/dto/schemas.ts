@@ -9,7 +9,8 @@ import { z as zod } from "zod";
 export const getCurrentUserResponse = zod.object({
   id: zod.string(),
   email: zod.string(),
-  name: zod.string(),
+  firstName: zod.string().optional(),
+  lastName: zod.string().optional(),
   preferredLang: zod.enum(["EN", "UA", "PL"]),
   activeRole: zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"]),
   roles: zod.array(zod.enum(["TRAINER", "TRAINEE", "PARENT", "ADMIN"])),

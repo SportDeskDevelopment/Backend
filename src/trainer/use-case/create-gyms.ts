@@ -3,7 +3,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { TrainerDto } from "../dto";
 
 type Command = {
-  gyms: TrainerDto.CreateGymsRequestGymsItem[];
+  gyms: TrainerDto.CreateGymsDtoGymsItem[];
   trainerUserId: string;
 };
 

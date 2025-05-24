@@ -19,7 +19,8 @@ export const mapUserToUserResponse = (
 ): UserResponse => ({
   id: user.id,
   email: user.email,
-  name: user.name,
+  firstName: user.firstName,
+  lastName: user.lastName,
   preferredLang: user.preferredLang,
   activeRole: user.activeRole as UserDto.UserResponseActiveRole,
   roles: user.roles as UserDto.UserResponseRolesItem[],

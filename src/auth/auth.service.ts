@@ -45,7 +45,8 @@ export class AuthService {
       data: {
         email: dto.email,
         passwordHash,
-        name: dto.name,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
         username: dto.username,
         emailConfirmCode,
         activeRole: DB.RoleType.TRAINEE,
