@@ -66,6 +66,7 @@ export class GetListUseCase {
         },
         trainers: {
           select: {
+            id: true,
             user: {
               select: {
                 firstName: true,
