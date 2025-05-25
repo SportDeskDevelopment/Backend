@@ -9,6 +9,7 @@ export * from "./getListFilters";
 export * from "./getListFiltersParameter";
 export * from "./getListParams";
 export * from "./getListRequest";
+export * from "./getListRequestFilters";
 export * from "./getListRequestSortBy";
 export * from "./getListRequestSortOrder";
 export * from "./getListResponse";

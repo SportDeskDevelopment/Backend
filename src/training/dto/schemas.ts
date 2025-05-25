@@ -6,34 +6,28 @@
  */
 import { z as zod } from "zod";
 
-export const getListQueryPageDefault = 1;
-export const getListQueryLimitDefault = 10;
-export const getListQuerySearchDefault = "";
-export const getListQuerySortOrderDefault = "desc";
+export const getListBodyPageDefault = 1;
+export const getListBodyLimitDefault = 10;
+export const getListBodySearchDefault = "";
+export const getListBodySortByDefault = "id";
+export const getListBodySortOrderDefault = "desc";
 
-export const getListQueryParams = zod.object({
-  page: zod.coerce
-    .number()
-    .default(getListQueryPageDefault)
-    .describe("Page number"),
-  limit: zod.coerce
-    .number()
-    .default(getListQueryLimitDefault)
-    .describe("Limit number of trainings per page"),
-  search: zod.coerce.string().optional().describe("Search query"),
-  sortOrder: zod
-    .enum(["asc", "desc"])
-    .default(getListQuerySortOrderDefault)
-    .describe("Sort order"),
+export const getListBody = zod.object({
+  page: zod.number().default(getListBodyPageDefault),
+  limit: zod.number().default(getListBodyLimitDefault),
+  search: zod.string().optional(),
+  sortBy: zod
+    .enum(["id", "name", "startDate"])
+    .default(getListBodySortByDefault),
+  sortOrder: zod.enum(["asc", "desc"]).default(getListBodySortOrderDefault),
   filters: zod
     .object({
-      gymIds: zod.array(zod.coerce.string()).optional(),
-      groupIds: zod.array(zod.coerce.string()).optional(),
-      trainerIds: zod.array(zod.coerce.string()).optional(),
-      startDate: zod.coerce.string().datetime({}).optional(),
+      gymIds: zod.array(zod.string()).optional(),
+      groupIds: zod.array(zod.string()).optional(),
+      trainerIds: zod.array(zod.string()).optional(),
+      startDate: zod.string().datetime({}).optional(),
     })
-    .optional()
-    .describe("Filters"),
+    .optional(),
 });
 
 export const getListResponse = zod.object({

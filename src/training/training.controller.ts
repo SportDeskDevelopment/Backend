@@ -1,15 +1,15 @@
 import {
   Body,
   Controller,
-  Get,
+  HttpCode,
+  HttpStatus,
   NotImplementedException,
   Post,
-  Query,
 } from "@nestjs/common";
-import { MarkAttendanceByNotTrainerUseCase } from "./use-case/mark-attendance-by-not-trainer";
+import { ResponseValidation, ZodPipe } from "../shared/lib/zod";
 import { TrainingDto, TrainingDtoSchemas } from "./dto";
 import { GetListUseCase } from "./use-case/get-list";
-import { ResponseValidation, ZodPipe } from "../shared/lib/zod";
+import { MarkAttendanceByNotTrainerUseCase } from "./use-case/mark-attendance-by-not-trainer";
 
 @Controller("training")
 export class TrainingController {
@@ -30,10 +30,11 @@ export class TrainingController {
     return this.markAttendanceByNotTrainerUseCase.exec(body);
   }
 
-  @Get("get-list")
+  @Post("get-list")
+  @HttpCode(HttpStatus.OK)
   @ResponseValidation(TrainingDtoSchemas.getListResponse)
   async getList(
-    @Query(new ZodPipe(TrainingDtoSchemas.getListQueryParams))
+    @Body(new ZodPipe(TrainingDtoSchemas.getListBody))
     query: TrainingDto.GetListRequest,
   ) {
     return this.getListUseCase.exec(query);
